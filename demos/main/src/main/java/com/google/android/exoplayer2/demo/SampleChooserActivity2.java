@@ -30,23 +30,38 @@ import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.ParserException;
+import com.google.android.exoplayer2.demo.models.CacheInfo;
+import com.google.android.exoplayer2.demo.offline.DrmUtil;
+import com.google.android.exoplayer2.demo.offline.OfflineUtil;
+import com.google.android.exoplayer2.demo.offline2.license.OfflineLicenseProvider;
+import com.google.android.exoplayer2.demo.offline2.license.OnlineLicenseProvider;
+import com.google.android.exoplayer2.drm.MediaDrmCallback;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DataSourceInputStream;
 import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.DefaultDataSource;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.Util;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import io.reactivex.Flowable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * An activity for selecting from a list of samples.
@@ -266,10 +281,86 @@ public class SampleChooserActivity2 extends Activity {
                                  View convertView, ViewGroup parent) {
             View view = convertView;
             if (view == null) {
-                view = LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_1, parent,
-                        false);
+                view = LayoutInflater.from(context).inflate(R.layout.inner_list_sample, parent, false);
             }
-            ((TextView) view).setText(getChild(groupPosition, childPosition).name);
+
+//            final String key = "123";
+            final String key = null;
+
+
+            UriSample child = (UriSample) getChild(groupPosition, childPosition);
+
+            final String name = child.name;
+            String lice = child.drmInfo.drmLicenseUrl;
+            String[] req = child.drmInfo.drmKeyRequestProperties;
+            final Uri playUri = Uri.parse(child.uri);
+
+            File externalCacheDir = view.getContext().getExternalCacheDir();
+            final File baseFolder = new File(externalCacheDir, "offline_samples");
+
+            TextView textView = view.findViewById(android.R.id.text1);
+            final ProgressBar progressBar = view.findViewById(R.id.progress);
+
+            DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("ExoPlayer", null);
+
+            MediaDrmCallback drmCallback = DrmUtil.getMediaDrmCallback(lice, factory, req);
+
+
+            OnlineLicenseProvider onlineLicenseProvider = new OnlineLicenseProvider(factory, drmCallback, playUri);
+            final OfflineLicenseProvider offlineLicenseProvider = new OfflineLicenseProvider(name, baseFolder, onlineLicenseProvider, key);
+
+            textView.setText(child.name);
+            progressBar.setProgress(0);
+
+            CacheInfo cacheInfo = OfflineUtil.getCacheInfo(baseFolder, name, key);
+
+            float cachePercent = cacheInfo != null ? cacheInfo.getDownloadPercent() : 0;
+
+            if (cachePercent >= 100) {
+                progressBar.setProgress((int) cachePercent);
+            } else {
+                progressBar.setProgress((int) cachePercent);
+
+                view.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(final View view) {
+
+                        Flowable<byte[]> licenseFlowable = offlineLicenseProvider.loadLicense2();
+
+                        final Flowable<Integer> contentFlowable = OfflineUtil.downloadAsync(baseFolder, name, playUri, key, 180);
+
+                        Flowable<Integer> finalFlowable = licenseFlowable.flatMap(new Function<byte[], Flowable<Integer>>() {
+                            @Override
+                            public Flowable<Integer> apply(byte[] bytes) throws Exception {
+                                return contentFlowable;
+                            }
+                        })
+                                .subscribeOn(Schedulers.computation())
+                                .observeOn(AndroidSchedulers.mainThread());
+
+
+                        finalFlowable.subscribe(new Consumer<Integer>() {
+                            @Override
+                            public void accept(Integer integer) throws Exception {
+                                progressBar.setProgress(integer);
+
+                                if (integer >= 100) {
+                                    view.setOnLongClickListener(null);
+                                }
+                            }
+                        }, new Consumer<Throwable>() {
+                            @Override
+                            public void accept(Throwable throwable) throws Exception {
+
+                            }
+                        });
+
+
+                        return false;
+                    }
+                });
+
+            }
             return view;
         }
 

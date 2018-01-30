@@ -74,7 +74,7 @@ import java.util.UUID;
   private static final int MSG_KEYS = 1;
   private static final int MAX_LICENSE_DURATION_TO_RENEW = 60;
 
-  private final ExoMediaDrm<T> mediaDrm;
+  public final ExoMediaDrm<T> mediaDrm;
   private final ProvisioningManager<T> provisioningManager;
   private final byte[] initData;
   private final String mimeType;
@@ -356,6 +356,14 @@ import java.util.UUID;
     }
     Pair<Long, Long> pair = WidevineUtil.getLicenseDurationRemainingSec(this);
     return Math.min(pair.first, pair.second);
+  }
+
+  public KeyRequest getKeyReQ(int type) throws NotProvisionedException {
+
+    byte[] scope = type == ExoMediaDrm.KEY_TYPE_RELEASE ? offlineLicenseKeySetId : sessionId;
+
+    return mediaDrm.getKeyRequest(scope, initData, mimeType, type,
+            optionalKeyRequestParameters);
   }
 
   private void postKeyRequest(int type, boolean allowRetry) {

@@ -1,8 +1,10 @@
 package com.google.android.exoplayer2.demo.offline;
 
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.android.exoplayer2.demo.models.CacheInfo;
 import com.google.android.exoplayer2.offline.Downloader;
 import com.google.android.exoplayer2.offline.DownloaderConstructorHelper;
 import com.google.android.exoplayer2.source.dash.DashUtil;
@@ -18,13 +20,17 @@ import com.google.android.exoplayer2.upstream.cache.CacheDataSource;
 import com.google.android.exoplayer2.upstream.cache.NoOpCacheEvictor;
 import com.google.android.exoplayer2.upstream.cache.SimpleCache;
 
+import org.json.JSONObject;
+
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Locale;
+
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableEmitter;
+import io.reactivex.FlowableOnSubscribe;
 
 /**
  * Created by sharish on 22/01/18.
@@ -32,6 +38,105 @@ import java.util.Locale;
 
 public class OfflineUtil {
 
+    public static final int VIDEO_HEIGHT_WILDCARD = -1;
+
+    public static Flowable<Integer> downloadAsync(final File downloadFolder, final String id, final Uri manifestUrl, final String key, final int targetVideoPixelHeight) {
+
+        return Flowable.create(new FlowableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(final FlowableEmitter<Integer> e) throws Exception {
+
+                downloadSync(downloadFolder, id, manifestUrl, key, targetVideoPixelHeight, new Downloader.ProgressListener() {
+                    @Override
+                    public void onDownloadProgress(Downloader downloader, float downloadPercentage, long downloadedBytes) {
+                        e.onNext((int) downloadPercentage);
+                    }
+                });
+
+            }
+
+        }, BackpressureStrategy.BUFFER);
+    }
+
+
+    private static void downloadSync(final File baseFolder, final String id, final Uri manifestUrl, final String key, int targetVideoPixelHeight, final Downloader.ProgressListener listener) throws Exception {
+
+        if (!baseFolder.exists()) {
+            baseFolder.mkdir();
+        }
+
+        byte[] secretKey = OfflineUtil.get16ByteSecretKey(key);
+
+
+        File manifestFolder = new File(baseFolder, id);
+
+        if (!manifestFolder.exists()) {
+            manifestFolder.mkdir();
+        }
+
+        SimpleCache cache = new SimpleCache(manifestFolder, new NoOpCacheEvictor(), secretKey);
+        DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("ExoPlayer", null);
+        DownloaderConstructorHelper constructorHelper =
+                new DownloaderConstructorHelper(cache, factory);
+
+        DashDownloader dashDownloader = new DashDownloader(manifestUrl, constructorHelper);
+
+        DashManifest dashManifest = DashUtil.loadManifest(factory.createDataSource(), manifestUrl);
+
+        // Select the first representation of the first adaptation set of the first period
+        dashDownloader.selectRepresentations(OfflineUtil.getRepresentationKeys(dashManifest, targetVideoPixelHeight));
+
+        CacheInfo cacheInfoNonfinal = OfflineUtil.getCacheInfo(baseFolder, id, key);
+
+        if (cacheInfoNonfinal == null) {
+            cacheInfoNonfinal = new CacheInfo(id);
+        }
+
+        final CacheInfo cacheInfo = cacheInfoNonfinal;
+
+        dashDownloader.download(new Downloader.ProgressListener() {
+            @Override
+            public void onDownloadProgress(Downloader downloader, float downloadPercentage, long downloadedBytes) {
+
+                cacheInfo.setDownloadBytes(downloadedBytes);
+                cacheInfo.setDownloadPercent(downloadPercentage);
+
+                storeCacheInfo(baseFolder, id, cacheInfo, key);
+
+                if (listener != null) {
+                    listener.onDownloadProgress(downloader, downloadPercentage, downloadedBytes);
+                }
+            }
+        });
+    }
+
+    public static CacheInfo getCacheInfo(File baseFolder, String id, String key) {
+
+        File contentFolder = new File(baseFolder, "info");
+
+        if (!contentFolder.exists()) return null;
+
+        byte[] secretKey = get16ByteSecretKey(key);
+
+        JSONObject object;
+
+        if (key == null || key.length() == 0) {
+            object = FileUtils.readJson(contentFolder, id);
+        } else {
+            object = FileUtils.readEncryptedJson(contentFolder, id, secretKey);
+        }
+
+        CacheInfo cacheInfo = new CacheInfo(id);
+        cacheInfo.fromJson(object);
+
+        return cacheInfo;
+
+    }
+
+    public static boolean isCacheAvailable(File baseFolder, String id, String key) {
+        CacheInfo cacheInfo = getCacheInfo(baseFolder, id, key);
+        return cacheInfo != null && cacheInfo.getDownloadPercent() > 0;
+    }
 
     private static RepresentationKey[] getRepresentationKeys(DashManifest dashManifest, int pixelHeight) {
 
@@ -53,7 +158,7 @@ public class OfflineUtil {
                     int repHeight = representation.format.height;
                     Log.d("Offline", String.format(Locale.getDefault(), "Period: %d, Adp : %d, Rep : %d, Format:%dp", i, j, k, repHeight));
 
-                    if(repHeight == pixelHeight || repHeight == -1) {
+                    if (repHeight == pixelHeight || repHeight == -1) {
                         keys.add(new RepresentationKey(i, j, k));
                     }
                 }
@@ -64,140 +169,69 @@ public class OfflineUtil {
 
     }
 
-    public static void download(File downloadFolder, final String id, Uri manifestUrl) throws IOException, InterruptedException {
+    static byte[] get16ByteSecretKey(String key) {
 
-        if (!downloadFolder.exists()) {
-            downloadFolder.mkdir();
-        }
+        if (key == null || key.length() == 0) return null;
 
-        File manifestFolder = new File(downloadFolder, id);
+        byte[] secretKey = new byte[16];
 
-        if (!manifestFolder.exists()) {
-            manifestFolder.mkdir();
-        }
-
-
-        SimpleCache cache = new SimpleCache(manifestFolder, new NoOpCacheEvictor());
-        DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("ExoPlayer", null);
-        DownloaderConstructorHelper constructorHelper =
-                new DownloaderConstructorHelper(cache, factory);
-
-        DashManifest dashManifest = DashUtil.loadManifest(factory.createDataSource(), manifestUrl);
-        DashDownloader dashDownloader = new DashDownloader(manifestUrl, constructorHelper);
-
-        // Select the first representation of the first adaptation set of the first period
-        dashDownloader.selectRepresentations(getRepresentationKeys(dashManifest, 1080));
-
-        dashDownloader.download(new Downloader.ProgressListener() {
-            @Override
-            public void onDownloadProgress(Downloader downloader, float downloadPercentage,
-                                           long downloadedBytes) {
-
-                Log.d("OfflineUtil", id + ":" + downloadPercentage + ", " + downloadedBytes / 1024 + "KBs");
-            }
-        });
-    }
-
-    public static boolean hasCache(File downloadFolder, String id) {
-
-        File manifestFolder = new File(downloadFolder, id);
-
-        if (manifestFolder.exists()) {
-            return manifestFolder.list().length > 10;
-        }
-
-        return false;
-
-    }
-
-    public static void storeOfflineKeyId(File mainFolder, String id, byte[] keyId) {
-
-        FileOutputStream fos = null;
-
-        if( ! mainFolder.exists()) {
-            mainFolder.mkdir();
-        }
         try {
-            fos = new FileOutputStream(new File(mainFolder, id));
-            fos.write(keyId, 0, keyId.length);
-            fos.close();
-        } catch (FileNotFoundException e) {
+            byte[] actualBytes = key.getBytes("UTF-8");
+            System.arraycopy(actualBytes, 0, secretKey, 0, Math.min(16, actualBytes.length));
+        } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (fos != null)
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
         }
 
-    }
-
-    public static byte[] readOfflineKeyId(File mainFolder, String id) {
-
-        FileInputStream fis = null;
-        if( ! mainFolder.exists()) {
-            mainFolder.mkdir();
-        }
-
-        File file = new File(mainFolder, id);
-
-        if( ! file.exists()) return null;
-        try {
-            fis = new FileInputStream(file);
-            int length = (int) file.length();
-            byte[] buffer = new byte[length];
-            fis.read(buffer, 0, length);
-            fis.close();
-
-            return buffer;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (fis != null)
-                try {
-                    fis.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-        }
-
-        return null;
-    }
-
-
-
-    public static CacheDataSource loadCache(File downloadFolder, String id) {
-
-
-        File manifestFolder = new File(downloadFolder, id);
-
-        SimpleCache cache = new SimpleCache(manifestFolder, new NoOpCacheEvictor());
-        DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("ExoPlayer", null);
-        return new CacheDataSource(cache, factory.createDataSource(), CacheDataSource.FLAG_BLOCK_ON_CACHE);
-    }
-
-    public static DataSource streamDirectly() {
-        return new DefaultHttpDataSourceFactory("ExoPlayer", null).createDataSource();
-
-    }
-
-
-    public static DataSource downloadAndLoad(File downloadFolder, String id, Uri manifestUrl) throws IOException, InterruptedException {
-
-        if (!hasCache(downloadFolder, id)) {
-            download(downloadFolder, id, manifestUrl);
-        }
-
-        return loadCache(downloadFolder, id);
+        return secretKey;
     }
 
     public static boolean isCacheNeeded(String id) {
         return id != null && id.startsWith("C_");
+    }
+
+    /**
+     * Loads the cache data source for the given video id.
+     * @param baseDirectory - Directory where all the cache resides
+     * @param id - unique id of the video to pick the video
+     * @param key - decryption key.
+     * @return - cache data source.
+     */
+    public static CacheDataSource loadCache(File baseDirectory, String id, @Nullable String key) {
+
+        File manifestFolder = new File(baseDirectory, id);
+
+        byte[] secretKey = get16ByteSecretKey(key);
+        SimpleCache cache = new SimpleCache(manifestFolder, new NoOpCacheEvictor(), secretKey);
+        DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("ExoPlayer", null);
+        return new CacheDataSource(cache, factory.createDataSource(), CacheDataSource.FLAG_BLOCK_ON_CACHE);
+    }
+
+
+    public static DataSource downloadAndLoad(File baseFolder, String id, Uri manifestUrl, String key, int targetVideoPixelHeight) throws Exception {
+
+        if (!isCacheAvailable(baseFolder, id, key)) {
+            downloadSync(baseFolder, id, manifestUrl, key, targetVideoPixelHeight, null);
+        }
+
+        return loadCache(baseFolder, id, key);
+    }
+
+
+    public static void storeCacheInfo(File baseDirectory, String id, CacheInfo cacheInfo, String key) {
+
+        File contentFolder = new File(baseDirectory, "info");
+
+        if (!contentFolder.exists()) {
+            contentFolder.mkdir();
+        }
+
+        byte[] secretKey = get16ByteSecretKey(key);
+
+        if (key == null || key.length() == 0) {
+            FileUtils.writeJson(contentFolder, id, cacheInfo.toJson());
+        } else {
+            FileUtils.writeEncryptedJson(contentFolder, id, secretKey, cacheInfo.toJson());
+        }
+
     }
 }

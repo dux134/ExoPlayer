@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -86,6 +87,7 @@ import io.reactivex.schedulers.Schedulers;
 public class PlayerActivity2 extends Activity implements OnClickListener,
         PlaybackControlView.VisibilityListener {
 
+
     public static final String DRM_LICENSE_URL = "drm_license_url";
     public static final String DRM_KEY_REQUEST_PROPERTIES = "drm_key_request_properties";
 
@@ -133,7 +135,6 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
         super.onCreate(savedInstanceState);
         shouldAutoPlay = true;
         clearResumePosition();
-
 
         mainHandler = new Handler();
         if (CookieHandler.getDefault() != DEFAULT_COOKIE_MANAGER) {
@@ -254,9 +255,12 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
 
         }
 
+//        String key = "123";
+        String key = null;
+
+
         String videoId = getVideoId();
-        File licenseFolder = new File(getExternalCacheDir(), "key_id");
-        File videoCacheFolder = new File(getExternalCacheDir(), "offline_samples");
+        File baseFolder = new File(getExternalCacheDir(), "offline_samples");
 
         MediaDrmCallback mediaDrmCallback = getMediaDrmCallback(drmLicenseUrl, keyRequestPropertiesArray);
 
@@ -265,13 +269,12 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
 
 
         if (OfflineUtil.isCacheNeeded(videoId)) {
-            mLicenseProvider = new OfflineLicenseProvider(videoId, licenseFolder, mLicenseProvider);
-            mVideoStreamProvider = new OfflineStreamProvider(videoId, playingUri, videoCacheFolder, mVideoStreamProvider);
+            mLicenseProvider = new OfflineLicenseProvider(videoId, baseFolder, mLicenseProvider, key);
+            mVideoStreamProvider = new OfflineStreamProvider(videoId, playingUri, baseFolder, key, 180, mVideoStreamProvider);
 
         }
 
         buildDrmStream();
-
 
     }
 
@@ -289,6 +292,8 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
                     @Override
                     public void onSuccess(byte[] keyId) {
 
+                        long licensePeriodLeft = mLicenseProvider.getLicensePeriodLeft(keyId);
+                        Log.d("License_Left", "Left:"+licensePeriodLeft);
                         onLicenseGenerated(keyId);
                     }
 
@@ -297,8 +302,6 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
                         e.printStackTrace();
                     }
                 });
-
-
     }
 
     private void onLicenseGenerated(byte[] keyId) {
@@ -317,7 +320,6 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
 
         Intent intent = getIntent();
         Uri playingUri = intent.getData();
-        String extn = intent.getStringExtra(EXTENSION_EXTRA);
         String action = intent.getAction();
 
 

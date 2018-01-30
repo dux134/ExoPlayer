@@ -22,6 +22,8 @@ import android.media.MediaDrm;
 import android.media.MediaDrmException;
 import android.media.NotProvisionedException;
 import android.os.Handler;
+import android.util.Log;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

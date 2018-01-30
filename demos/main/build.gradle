@@ -54,10 +54,10 @@ android {
 ext {
     rxJavaVersion = '2.1.0'
     rxAndroidVersion = '2.0.1'
+
 }
 
 dependencies {
-
 
 
     compile project(modulePrefix + 'library-core')
@@ -72,9 +72,13 @@ dependencies {
     withExtensionsCompile project(path: modulePrefix + 'extension-vp9')
     withExtensionsCompile project(path: modulePrefix + 'extension-rtmp')
 
+    testCompile 'junit:junit:' + junitVersion
+    testCompile 'org.mockito:mockito-core:' + mockitoVersion
+    testCompile 'org.robolectric:robolectric:' + robolectricVersion
 
     // RxJava
     compile "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
     compile "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion"
 
+    testCompile 'junit:junit:4.12'
 }

@@ -1,7 +1,6 @@
 package com.google.android.exoplayer2.demo.offline2;
 
 import android.net.Uri;
-import android.util.Log;
 
 import com.google.android.exoplayer2.demo.offline.OfflineUtil;
 import com.google.android.exoplayer2.drm.DefaultDrmSessionManager;
@@ -22,13 +21,20 @@ public class OfflineStreamProvider implements IVideoStreamDataSourceProvider {
     private String mId;
     private File mBaseFolder;
     private Uri mManifestUri;
+    private String mEncryptionKey;
+    private int mVideoHeight = OfflineUtil.VIDEO_HEIGHT_WILDCARD;
 
     public OfflineStreamProvider(String mId, Uri mManifestUri, File mBaseFolder, IVideoStreamDataSourceProvider streamProvider) {
+        this(mId, mManifestUri, mBaseFolder, null, OfflineUtil.VIDEO_HEIGHT_WILDCARD, streamProvider);
+    }
+
+    public OfflineStreamProvider(String mId, Uri mManifestUri, File mBaseFolder, String encryptionKey, int videoHeight, IVideoStreamDataSourceProvider streamProvider) {
         this.mId = mId;
         this.mBaseFolder = mBaseFolder;
         this.mManifestUri = mManifestUri;
         this.mBaseStreamProvider = streamProvider;
-
+        mEncryptionKey = encryptionKey;
+        mVideoHeight = videoHeight;
     }
 
     @Override
@@ -38,19 +44,13 @@ public class OfflineStreamProvider implements IVideoStreamDataSourceProvider {
             mBaseFolder.mkdir();
         }
 
-        if (OfflineUtil.hasCache(mBaseFolder, mId)) {
-
-            Log.d("Offline", "Playing from cache");
-            return OfflineUtil.loadCache(mBaseFolder, mId);
+        if (OfflineUtil.isCacheAvailable(mBaseFolder, mId, mEncryptionKey)) {
+            return OfflineUtil.loadCache(mBaseFolder, mId, mEncryptionKey);
         } else {
             try {
-                Log.d("Offline", "Creating cache");
-
-                return OfflineUtil.downloadAndLoad(mBaseFolder, mId, mManifestUri);
+                return OfflineUtil.downloadAndLoad(mBaseFolder, mId, mManifestUri, mEncryptionKey, mVideoHeight);
             } catch (Exception e) {
                 e.printStackTrace();
-
-                Log.d("Offline", "Creating cache failed. Streaming directly");
                 return mBaseStreamProvider.createDataSource();
 
             }

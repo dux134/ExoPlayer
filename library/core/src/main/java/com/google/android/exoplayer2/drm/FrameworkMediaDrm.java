@@ -118,6 +118,7 @@ public final class FrameworkMediaDrm implements ExoMediaDrm<FrameworkMediaCrypto
       HashMap<String, String> optionalParameters) throws NotProvisionedException {
     final MediaDrm.KeyRequest request = mediaDrm.getKeyRequest(scope, init, mimeType, keyType,
         optionalParameters);
+
     return new DefaultKeyRequest(request.getData(), request.getDefaultUrl());
   }
 
