@@ -1,4 +1,4 @@
-package com.google.android.exoplayer2.demo.models;
+package com.google.android.exoplayer2.offline.models;
 
 /**
  * Created by sharish on 25/01/18.

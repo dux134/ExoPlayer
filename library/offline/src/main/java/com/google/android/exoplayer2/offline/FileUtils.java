@@ -1,4 +1,4 @@
-package com.google.android.exoplayer2.demo.offline;
+package com.google.android.exoplayer2.offline;
 
 import android.support.annotation.NonNull;
 

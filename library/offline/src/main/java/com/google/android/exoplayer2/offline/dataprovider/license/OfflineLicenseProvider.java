@@ -1,9 +1,9 @@
-package com.google.android.exoplayer2.demo.offline2.license;
+package com.google.android.exoplayer2.offline.dataprovider.license;
 
 import android.util.Log;
 
-import com.google.android.exoplayer2.demo.models.CacheInfo;
-import com.google.android.exoplayer2.demo.offline.OfflineUtil;
+import com.google.android.exoplayer2.offline.OfflineUtil;
+import com.google.android.exoplayer2.offline.models.CacheInfo;
 
 import java.io.File;
 

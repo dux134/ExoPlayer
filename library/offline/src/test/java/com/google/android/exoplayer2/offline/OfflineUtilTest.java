@@ -1,4 +1,5 @@
-package com.google.android.exoplayer2.demo.offline;
+package com.google.android.exoplayer2.offline;
+
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

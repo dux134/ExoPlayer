@@ -1,4 +1,4 @@
-package com.google.android.exoplayer2.demo.offline2;
+package com.google.android.exoplayer2.offline.dataprovider.stream;
 
 import android.os.Handler;
 

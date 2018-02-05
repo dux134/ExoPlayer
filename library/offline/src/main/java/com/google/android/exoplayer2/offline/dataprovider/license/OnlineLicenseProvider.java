@@ -1,4 +1,4 @@
-package com.google.android.exoplayer2.demo.offline2.license;
+package com.google.android.exoplayer2.offline.dataprovider.license;
 
 import android.net.Uri;
 import android.util.Log;

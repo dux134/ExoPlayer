@@ -1,12 +1,10 @@
-package com.google.android.exoplayer2.demo.offline;
+package com.google.android.exoplayer2.offline;
 
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.google.android.exoplayer2.demo.models.CacheInfo;
-import com.google.android.exoplayer2.offline.Downloader;
-import com.google.android.exoplayer2.offline.DownloaderConstructorHelper;
+import com.google.android.exoplayer2.offline.models.CacheInfo;
 import com.google.android.exoplayer2.source.dash.DashUtil;
 import com.google.android.exoplayer2.source.dash.manifest.AdaptationSet;
 import com.google.android.exoplayer2.source.dash.manifest.DashManifest;

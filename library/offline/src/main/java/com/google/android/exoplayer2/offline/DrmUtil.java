@@ -1,4 +1,4 @@
-package com.google.android.exoplayer2.demo.offline;
+package com.google.android.exoplayer2.offline;
 
 import com.google.android.exoplayer2.drm.HttpMediaDrmCallback;
 import com.google.android.exoplayer2.drm.MediaDrmCallback;

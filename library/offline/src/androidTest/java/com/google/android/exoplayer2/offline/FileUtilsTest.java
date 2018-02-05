@@ -1,8 +1,9 @@
-package com.google.android.exoplayer2.demo.offline;
+package com.google.android.exoplayer2.offline;
 
 import android.content.Context;
 import android.test.InstrumentationTestCase;
 
+import com.google.android.exoplayer2.offline.FileUtils;
 import com.google.android.exoplayer2.util.Util;
 
 import org.json.JSONObject;

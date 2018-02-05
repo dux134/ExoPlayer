@@ -35,12 +35,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.ParserException;
-import com.google.android.exoplayer2.demo.models.CacheInfo;
-import com.google.android.exoplayer2.demo.offline.DrmUtil;
-import com.google.android.exoplayer2.demo.offline.OfflineUtil;
-import com.google.android.exoplayer2.demo.offline2.license.OfflineLicenseProvider;
-import com.google.android.exoplayer2.demo.offline2.license.OnlineLicenseProvider;
 import com.google.android.exoplayer2.drm.MediaDrmCallback;
+import com.google.android.exoplayer2.offline.DrmUtil;
+import com.google.android.exoplayer2.offline.OfflineUtil;
+import com.google.android.exoplayer2.offline.dataprovider.license.OfflineLicenseProvider;
+import com.google.android.exoplayer2.offline.dataprovider.license.OnlineLicenseProvider;
+import com.google.android.exoplayer2.offline.models.CacheInfo;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DataSourceInputStream;
 import com.google.android.exoplayer2.upstream.DataSpec;

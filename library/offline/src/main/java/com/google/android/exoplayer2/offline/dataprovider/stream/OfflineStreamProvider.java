@@ -1,8 +1,8 @@
-package com.google.android.exoplayer2.demo.offline2;
+package com.google.android.exoplayer2.offline.dataprovider.stream;
 
 import android.net.Uri;
 
-import com.google.android.exoplayer2.demo.offline.OfflineUtil;
+import com.google.android.exoplayer2.offline.OfflineUtil;
 import com.google.android.exoplayer2.drm.DefaultDrmSessionManager;
 import com.google.android.exoplayer2.drm.FrameworkMediaCrypto;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
