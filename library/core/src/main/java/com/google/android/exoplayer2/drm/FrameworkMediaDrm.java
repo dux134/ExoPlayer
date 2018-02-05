@@ -125,6 +125,8 @@ public final class FrameworkMediaDrm implements ExoMediaDrm<FrameworkMediaCrypto
   @Override
   public byte[] provideKeyResponse(byte[] scope, byte[] response)
       throws NotProvisionedException, DeniedByServerException {
+
+    String str = new String(response);
     return mediaDrm.provideKeyResponse(scope, response);
   }
 

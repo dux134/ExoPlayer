@@ -23,6 +23,8 @@ include modulePrefix + 'library-dash'
 include modulePrefix + 'library-hls'
 include modulePrefix + 'library-smoothstreaming'
 include modulePrefix + 'library-ui'
+include modulePrefix + 'library-offline'
+
 include modulePrefix + 'testutils'
 include modulePrefix + 'extension-ffmpeg'
 include modulePrefix + 'extension-flac'
@@ -42,6 +44,8 @@ project(modulePrefix + 'library-dash').projectDir = new File(rootDir, 'library/d
 project(modulePrefix + 'library-hls').projectDir = new File(rootDir, 'library/hls')
 project(modulePrefix + 'library-smoothstreaming').projectDir = new File(rootDir, 'library/smoothstreaming')
 project(modulePrefix + 'library-ui').projectDir = new File(rootDir, 'library/ui')
+project(modulePrefix + 'library-offline').projectDir = new File(rootDir, 'library/offline')
+
 project(modulePrefix + 'testutils').projectDir = new File(rootDir, 'testutils')
 project(modulePrefix + 'extension-ffmpeg').projectDir = new File(rootDir, 'extensions/ffmpeg')
 project(modulePrefix + 'extension-flac').projectDir = new File(rootDir, 'extensions/flac')

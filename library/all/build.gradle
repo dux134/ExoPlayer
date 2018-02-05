@@ -30,6 +30,8 @@ dependencies {
     compile project(modulePrefix + 'library-hls')
     compile project(modulePrefix + 'library-smoothstreaming')
     compile project(modulePrefix + 'library-ui')
+    compile project(modulePrefix + 'library-offline')
+
 }
 
 ext {
