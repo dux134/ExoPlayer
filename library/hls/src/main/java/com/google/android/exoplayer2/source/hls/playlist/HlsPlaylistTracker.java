@@ -135,8 +135,8 @@ public final class HlsPlaylistTracker implements Loader.Callback<ParsingLoadable
    * @param dataSourceFactory A factory for {@link DataSource} instances.
    * @param eventDispatcher A dispatcher to notify of events.
    * @param minRetryCount The minimum number of times loads must be retried before
-   *     {@link #maybeThrowPlaylistRefreshError(HlsUrl)} and
-   *     {@link #maybeThrowPrimaryPlaylistRefreshError()} propagate any loading errors.
+   *      #maybeThrowPlaylistRefreshError(HlsUrl) and
+   *      #maybeThrowPrimaryPlaylistRefreshError() propagate any loading errors.
    * @param primaryPlaylistListener A callback for the primary playlist change events.
    */
   public HlsPlaylistTracker(Uri initialPlaylistUri, HlsDataSourceFactory dataSourceFactory,

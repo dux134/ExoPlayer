@@ -44,26 +44,6 @@ import java.util.List;
  *
  * <p>Example usage:
  *
- * <pre>
- * {@code
- * SimpleCache cache = new SimpleCache(downloadFolder, new NoOpCacheEvictor());
- * DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("ExoPlayer", null);
- * DownloaderConstructorHelper constructorHelper =
- *     new DownloaderConstructorHelper(cache, factory);
- * DashDownloader dashDownloader = new DashDownloader(manifestUrl, constructorHelper);
- * // Select the first representation of the first adaptation set of the first period
- * dashDownloader.selectRepresentations(new RepresentationKey[] {new RepresentationKey(0, 0, 0)});
- * dashDownloader.download(new ProgressListener() {
- *   @Override
- *   public void onDownloadProgress(Downloader downloader, float downloadPercentage,
- *       long downloadedBytes) {
- *     // Invoked periodically during the download.
- *   }
- * });
- * // Access downloaded data using CacheDataSource
- * CacheDataSource cacheDataSource =
- *     new CacheDataSource(cache, factory.createDataSource(), CacheDataSource.FLAG_BLOCK_ON_CACHE);}
- * </pre>
  */
 public final class DashDownloader extends SegmentDownloader<DashManifest, RepresentationKey> {
 
