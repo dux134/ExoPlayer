@@ -31,7 +31,7 @@ import javax.crypto.spec.SecretKeySpec;
  * Created by sharish on 29/01/18.
  */
 
-public class FileUtils {
+public class FileUtil {
 
     private static final String CHARSET = "UTF-8";
 
@@ -40,17 +40,24 @@ public class FileUtils {
      */
     private static final int IV_LEN = 16;
 
-    public static void writeJson(File folder, String id, JSONObject object) {
+    /**
+     * Writes the given JSON into a file
+     *
+     * @param targetDir     - Directory where the file has to be created.
+     * @param name          - File name
+     * @param object        - JSON data.
+     */
+    public static void writeJson(File targetDir, String name, JSONObject object) {
 
         FileOutputStream fos = null;
 
-        if (!folder.exists()) {
-            folder.mkdir();
+        if (!targetDir.exists()) {
+            targetDir.mkdir();
         }
         try {
 
             byte[] bytes = object.toString().getBytes("UTF-8");
-            fos = new FileOutputStream(new File(folder, id));
+            fos = new FileOutputStream(new File(targetDir, name));
             fos.write(bytes, 0, bytes.length);
             fos.close();
         } catch (FileNotFoundException e) {
@@ -180,14 +187,21 @@ public class FileUtils {
 
     }
 
-    public static JSONObject readJson(File mainFolder, String id) {
+    /**
+     * Reads the file content as JSON object
+     *
+     * @param targetDir     - Directory where the file has to be created.
+     * @param name          - File name
+     * @return Ouput JSON when successful, null when error occurred.
+     */
+    public static JSONObject readJson(File targetDir, String name) {
 
         FileInputStream fis = null;
-        if (!mainFolder.exists()) {
-            mainFolder.mkdir();
+        if (!targetDir.exists()) {
+            targetDir.mkdir();
         }
 
-        File file = new File(mainFolder, id);
+        File file = new File(targetDir, name);
 
         if (!file.exists()) return null;
         try {
@@ -213,15 +227,21 @@ public class FileUtils {
 
     }
 
-    public static void writeBytes(File mainFolder, String id, byte[] keyId) {
+    /**
+     * Writes the given byte array into a file
+     *
+     * @param targetDir     - Directory where the file has to be created.
+     * @param name          - File name
+     */
+    public static void writeBytes(File targetDir, String name, byte[] keyId) {
 
         FileOutputStream fos = null;
 
-        if (!mainFolder.exists()) {
-            mainFolder.mkdir();
+        if (!targetDir.exists()) {
+            targetDir.mkdir();
         }
         try {
-            fos = new FileOutputStream(new File(mainFolder, id));
+            fos = new FileOutputStream(new File(targetDir, name));
             fos.write(keyId, 0, keyId.length);
             fos.close();
         } catch (FileNotFoundException e) {
@@ -239,14 +259,22 @@ public class FileUtils {
 
     }
 
-    public static byte[] readBytes(File mainFolder, String id) {
+    /**
+     * Reads the file content as byte array.
+     *
+     * @param targetDir     - Directory where the file has to be created.
+     * @param name          - File name
+     * @return file content in the form of byte[].
+     *
+     */
+    public static byte[] readBytes(File targetDir, String name) {
 
         FileInputStream fis = null;
-        if (!mainFolder.exists()) {
-            mainFolder.mkdir();
+        if (!targetDir.exists()) {
+            targetDir.mkdir();
         }
 
-        File file = new File(mainFolder, id);
+        File file = new File(targetDir, name);
 
         if (!file.exists()) return null;
         try {

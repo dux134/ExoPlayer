@@ -11,7 +11,6 @@ import java.io.UnsupportedEncodingException;
 
 public class CacheInfo {
 
-
     private static final String KEY_ID = "_id";
     private static final String KEY_DOWNLOAD_PERCENT = "download_percent";
     private static final String KEY_LICENSE_KEY = "license_key";
@@ -63,7 +62,7 @@ public class CacheInfo {
 
     public void fromJson(JSONObject object) {
 
-        if(object == null) return;
+        if (object == null) return;
         try {
 
             mId = object.optString(KEY_ID);
@@ -84,7 +83,9 @@ public class CacheInfo {
 
             object.put(KEY_ID, mId);
             object.put(KEY_DOWNLOAD_PERCENT, mDownloadPercent);
-            object.put(KEY_LICENSE_KEY, new String(mLicenseKey));
+            if (mLicenseKey != null) {
+                object.put(KEY_LICENSE_KEY, new String(mLicenseKey));
+            }
             object.put(KEY_DOWNLOADED_BYTES, mDownloadBytes);
         } catch (JSONException e) {
             e.printStackTrace();

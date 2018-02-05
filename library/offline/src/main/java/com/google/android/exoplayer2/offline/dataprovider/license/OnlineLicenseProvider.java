@@ -1,7 +1,6 @@
 package com.google.android.exoplayer2.offline.dataprovider.license;
 
 import android.net.Uri;
-import android.util.Log;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.drm.DrmInitData;
@@ -23,9 +22,6 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableEmitter;
 import io.reactivex.FlowableOnSubscribe;
-import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
-import io.reactivex.SingleOnSubscribe;
 
 /**
  * Created by sharish on 22/01/18.
@@ -41,26 +37,6 @@ public class OnlineLicenseProvider implements ILicenseProvider {
         this.httpDataSourceFactory = httpDataSourceFactory;
         this.mMediaDrmCallback = mMediaDrmCallback;
         this.mPlayingUri = mPlayingUri;
-
-    }
-
-    @Override
-    public Single<byte[]> loadLicense() {
-
-
-        return Single.create(new SingleOnSubscribe<byte[]>() {
-            @Override
-            public void subscribe(SingleEmitter<byte[]> e) throws Exception {
-
-                byte[] keyId = loadLicenseSync();
-
-                if (keyId != null) {
-                    e.onSuccess(keyId);
-                } else {
-                    e.onError(new RuntimeException("Failed to download key id"));
-                }
-            }
-        });
 
     }
 
@@ -83,29 +59,15 @@ public class OnlineLicenseProvider implements ILicenseProvider {
     @Override
     public long getLicensePeriodLeft(byte[] keyId) {
 
-        long t1 = System.currentTimeMillis();
 
         UUID widevineUuid = C.WIDEVINE_UUID;
         FrameworkMediaDrm frameworkMediaDrm;
         try {
             frameworkMediaDrm = FrameworkMediaDrm.newInstance(widevineUuid);
 
-            long t2 = System.currentTimeMillis();
-
             OfflineLicenseHelper<FrameworkMediaCrypto> offlineLicenseHelper = new OfflineLicenseHelper<>(widevineUuid, frameworkMediaDrm, mMediaDrmCallback, null);
 
-            long t3 = System.currentTimeMillis();
-
-            long left = offlineLicenseHelper.getLicenseDurationRemainingSec(keyId).first;
-
-            long t4 = System.currentTimeMillis();
-
-
-            Log.d("ExecutionCheck", "getLicensePeriodLeft: t4-t3:" + (t4 - t3));
-            Log.d("ExecutionCheck", "getLicensePeriodLeft: t3-t2:" + (t3 - t2));
-            Log.d("ExecutionCheck", "getLicensePeriodLeft: t2-t1:" + (t2 - t1));
-
-            return left;
+            return offlineLicenseHelper.getLicenseDurationRemainingSec(keyId).first;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -116,7 +78,7 @@ public class OnlineLicenseProvider implements ILicenseProvider {
     }
 
 
-    byte[] loadLicenseSync() throws IOException, InterruptedException, DrmSession.DrmSessionException, UnsupportedDrmException {
+    private byte[] loadLicenseSync() throws IOException, InterruptedException, DrmSession.DrmSessionException, UnsupportedDrmException {
 
         UUID widevineUuid = C.WIDEVINE_UUID;
         FrameworkMediaDrm frameworkMediaDrm = FrameworkMediaDrm.newInstance(widevineUuid);

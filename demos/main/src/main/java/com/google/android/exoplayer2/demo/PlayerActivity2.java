@@ -38,14 +38,6 @@ import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.offline.DrmUtil;
-import com.google.android.exoplayer2.offline.OfflineUtil;
-import com.google.android.exoplayer2.offline.dataprovider.stream.IVideoStreamDataSourceProvider;
-import com.google.android.exoplayer2.offline.dataprovider.stream.OfflineStreamProvider;
-import com.google.android.exoplayer2.offline.dataprovider.stream.OnlineStreamProvider;
-import com.google.android.exoplayer2.offline.dataprovider.license.ILicenseProvider;
-import com.google.android.exoplayer2.offline.dataprovider.license.OfflineLicenseProvider;
-import com.google.android.exoplayer2.offline.dataprovider.license.OnlineLicenseProvider;
 import com.google.android.exoplayer2.drm.DefaultDrmSessionManager;
 import com.google.android.exoplayer2.drm.DrmSessionManager;
 import com.google.android.exoplayer2.drm.FrameworkMediaCrypto;
@@ -53,6 +45,12 @@ import com.google.android.exoplayer2.drm.MediaDrmCallback;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer.DecoderInitializationException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil.DecoderQueryException;
+import com.google.android.exoplayer2.offline.dataprovider.license.ILicenseProvider;
+import com.google.android.exoplayer2.offline.dataprovider.license.OfflineLicenseProvider;
+import com.google.android.exoplayer2.offline.dataprovider.license.OnlineLicenseProvider;
+import com.google.android.exoplayer2.offline.dataprovider.stream.IVideoStreamDataSourceProvider;
+import com.google.android.exoplayer2.offline.dataprovider.stream.OfflineStreamProvider;
+import com.google.android.exoplayer2.offline.dataprovider.stream.OnlineStreamProvider;
 import com.google.android.exoplayer2.source.BehindLiveWindowException;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.MediaSourceEventListener;
@@ -76,9 +74,8 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 
-import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -268,7 +265,7 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
         mVideoStreamProvider = new OnlineStreamProvider(mediaDrmCallback);
 
 
-        if (OfflineUtil.isCacheNeeded(videoId)) {
+        if (DemoUtil.isCacheNeeded(videoId)) {
             mLicenseProvider = new OfflineLicenseProvider(videoId, baseFolder, mLicenseProvider, key);
             mVideoStreamProvider = new OfflineStreamProvider(videoId, playingUri, baseFolder, key, 180, mVideoStreamProvider);
 
@@ -280,26 +277,22 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
 
     private void buildDrmStream() {
 
-        mLicenseProvider.loadLicense()
+        mLicenseProvider.loadLicense2()
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new SingleObserver<byte[]>() {
+                .subscribe(new Consumer<byte[]>() {
                     @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onSuccess(byte[] keyId) {
+                    public void accept(byte[] keyId) throws Exception {
 
                         long licensePeriodLeft = mLicenseProvider.getLicensePeriodLeft(keyId);
                         Log.d("License_Left", "Left:"+licensePeriodLeft);
                         onLicenseGenerated(keyId);
                     }
-
+                }, new Consumer<Throwable>() {
                     @Override
-                    public void onError(Throwable e) {
+                    public void accept(Throwable e) throws Exception {
                         e.printStackTrace();
+
                     }
                 });
     }
@@ -390,7 +383,7 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
 
 
     private MediaDrmCallback getMediaDrmCallback(String licenseUrl, String[] keyRequestPropertiesArray) {
-        return DrmUtil.getMediaDrmCallback(licenseUrl, getHttpFactory(), keyRequestPropertiesArray);
+        return DemoUtil.getMediaDrmCallback(licenseUrl, getHttpFactory(), keyRequestPropertiesArray);
     }
 
     private String getVideoId() {

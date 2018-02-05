@@ -36,11 +36,11 @@ import android.widget.Toast;
 
 import com.google.android.exoplayer2.ParserException;
 import com.google.android.exoplayer2.drm.MediaDrmCallback;
-import com.google.android.exoplayer2.offline.DrmUtil;
 import com.google.android.exoplayer2.offline.OfflineUtil;
 import com.google.android.exoplayer2.offline.dataprovider.license.OfflineLicenseProvider;
 import com.google.android.exoplayer2.offline.dataprovider.license.OnlineLicenseProvider;
 import com.google.android.exoplayer2.offline.models.CacheInfo;
+import com.google.android.exoplayer2.offline.models.DownloadInfo;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DataSourceInputStream;
 import com.google.android.exoplayer2.upstream.DataSpec;
@@ -303,7 +303,7 @@ public class SampleChooserActivity2 extends Activity {
 
             DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("ExoPlayer", null);
 
-            MediaDrmCallback drmCallback = DrmUtil.getMediaDrmCallback(lice, factory, req);
+            MediaDrmCallback drmCallback = DemoUtil.getMediaDrmCallback(lice, factory, req);
 
 
             OnlineLicenseProvider onlineLicenseProvider = new OnlineLicenseProvider(factory, drmCallback, playUri);
@@ -327,11 +327,11 @@ public class SampleChooserActivity2 extends Activity {
 
                         Flowable<byte[]> licenseFlowable = offlineLicenseProvider.loadLicense2();
 
-                        final Flowable<Integer> contentFlowable = OfflineUtil.downloadAsync(baseFolder, name, playUri, key, 180);
+                        final Flowable<DownloadInfo> contentFlowable = OfflineUtil.downloadAsync(baseFolder, name, playUri, key, 180);
 
-                        Flowable<Integer> finalFlowable = licenseFlowable.flatMap(new Function<byte[], Flowable<Integer>>() {
+                        Flowable<DownloadInfo> finalFlowable = licenseFlowable.flatMap(new Function<byte[], Flowable<DownloadInfo>>() {
                             @Override
-                            public Flowable<Integer> apply(byte[] bytes) throws Exception {
+                            public Flowable<DownloadInfo> apply(byte[] bytes) throws Exception {
                                 return contentFlowable;
                             }
                         })
@@ -339,12 +339,13 @@ public class SampleChooserActivity2 extends Activity {
                                 .observeOn(AndroidSchedulers.mainThread());
 
 
-                        finalFlowable.subscribe(new Consumer<Integer>() {
+                        finalFlowable.subscribe(new Consumer<DownloadInfo>() {
                             @Override
-                            public void accept(Integer integer) throws Exception {
-                                progressBar.setProgress(integer);
+                            public void accept(DownloadInfo downloadInfo) throws Exception {
+                                int downloadPercent = (int) downloadInfo.downloadPercent;
+                                progressBar.setProgress(downloadPercent);
 
-                                if (integer >= 100) {
+                                if (downloadPercent >= 100) {
                                     view.setOnLongClickListener(null);
                                 }
                             }

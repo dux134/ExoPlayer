@@ -18,7 +18,10 @@ package com.google.android.exoplayer2.demo;
 import android.text.TextUtils;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
+import com.google.android.exoplayer2.drm.HttpMediaDrmCallback;
+import com.google.android.exoplayer2.drm.MediaDrmCallback;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
+import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
 import java.util.Locale;
@@ -52,6 +55,23 @@ import java.util.UUID;
           throw new UnsupportedDrmException(UnsupportedDrmException.REASON_UNSUPPORTED_SCHEME);
         }
     }
+  }
+
+  public static boolean isCacheNeeded(String id) {
+    return id != null && id.startsWith("C_");
+  }
+
+
+  public static MediaDrmCallback getMediaDrmCallback(String licenseUrl, HttpDataSource.Factory httpFactory, String[] keyRequestPropertiesArray) {
+
+    HttpMediaDrmCallback drmCallback = new HttpMediaDrmCallback(licenseUrl, httpFactory);
+    if (keyRequestPropertiesArray != null) {
+      for (int i = 0; i < keyRequestPropertiesArray.length - 1; i += 2) {
+        drmCallback.setKeyRequestProperty(keyRequestPropertiesArray[i],
+                keyRequestPropertiesArray[i + 1]);
+      }
+    }
+    return drmCallback;
   }
 
   /**

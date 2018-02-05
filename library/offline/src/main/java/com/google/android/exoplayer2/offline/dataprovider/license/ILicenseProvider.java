@@ -9,10 +9,7 @@ import io.reactivex.Single;
 
 public interface ILicenseProvider {
 
-    Single<byte[]> loadLicense();
-
     Flowable<byte[]> loadLicense2();
-
 
     long getLicensePeriodLeft(byte[] keyId);
 }
