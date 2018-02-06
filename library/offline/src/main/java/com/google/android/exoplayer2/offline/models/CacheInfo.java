@@ -67,7 +67,8 @@ public class CacheInfo {
 
             mId = object.optString(KEY_ID);
             mDownloadPercent = (float) object.optDouble(KEY_DOWNLOAD_PERCENT);
-            mLicenseKey = object.optString(KEY_LICENSE_KEY).getBytes("UTF-8");
+            String licenseKeyString = object.optString(KEY_LICENSE_KEY);
+            mLicenseKey = licenseKeyString != null ? licenseKeyString.getBytes("UTF-8") : null;
             mDownloadBytes = object.optLong(KEY_DOWNLOADED_BYTES);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
