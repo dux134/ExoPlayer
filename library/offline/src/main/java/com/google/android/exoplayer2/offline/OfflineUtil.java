@@ -59,6 +59,8 @@ public class OfflineUtil {
                     @Override
                     public void onDownloadProgress(Downloader downloader, float downloadPercentage, long downloadedBytes) {
 
+                        if(e.isCancelled()) return;
+                        
                         DownloadInfo downloadInfo = new DownloadInfo(downloadPercentage, downloadedBytes);
                         e.onNext(downloadInfo);
 
