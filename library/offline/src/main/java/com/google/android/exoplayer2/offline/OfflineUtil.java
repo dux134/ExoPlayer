@@ -55,20 +55,25 @@ public class OfflineUtil {
             @Override
             public void subscribe(final FlowableEmitter<DownloadInfo> e) throws Exception {
 
-                downloadSync(downloadFolder, id, manifestUrl, key, targetVideoPixelHeight, new Downloader.ProgressListener() {
-                    @Override
-                    public void onDownloadProgress(Downloader downloader, float downloadPercentage, long downloadedBytes) {
+                try {
+                    downloadSync(downloadFolder, id, manifestUrl, key, targetVideoPixelHeight, new Downloader.ProgressListener() {
+                        @Override
+                        public void onDownloadProgress(Downloader downloader, float downloadPercentage, long downloadedBytes) {
 
-                        if(e.isCancelled()) return;
-                        
-                        DownloadInfo downloadInfo = new DownloadInfo(downloadPercentage, downloadedBytes);
-                        e.onNext(downloadInfo);
+                            if (e.isCancelled()) return;
 
-                        if (downloadPercentage == 100) {
-                            e.onComplete();
+                            DownloadInfo downloadInfo = new DownloadInfo(downloadPercentage, downloadedBytes);
+                            e.onNext(downloadInfo);
+
+                            if (downloadPercentage == 100) {
+                                e.onComplete();
+                            }
                         }
-                    }
-                });
+                    });
+                }catch (InterruptedException e1) {
+                    if(e.isCancelled()) return;
+                    throw e1;
+                }
 
 
             }
