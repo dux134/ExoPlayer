@@ -1,11 +1,10 @@
 package com.google.android.exoplayer2.offline.dataprovider.stream;
 
-import android.net.Uri;
-
-import com.google.android.exoplayer2.offline.OfflineUtil;
 import com.google.android.exoplayer2.drm.DefaultDrmSessionManager;
 import com.google.android.exoplayer2.drm.FrameworkMediaCrypto;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
+import com.google.android.exoplayer2.offline.OfflineUtil;
+import com.google.android.exoplayer2.offline.dataprovider.source.IDataSourceProvider;
 import com.google.android.exoplayer2.upstream.DataSource;
 
 import java.io.File;
@@ -20,21 +19,23 @@ public class OfflineStreamProvider implements IVideoStreamDataSourceProvider {
 
     private String mId;
     private File mBaseFolder;
-    private Uri mManifestUri;
+    private String mManifestUrl;
     private String mEncryptionKey;
     private int mVideoHeight = OfflineUtil.VIDEO_HEIGHT_WILDCARD;
+    private IDataSourceProvider mDataSourceProvider;
 
-    public OfflineStreamProvider(String mId, Uri mManifestUri, File mBaseFolder, IVideoStreamDataSourceProvider streamProvider) {
-        this(mId, mManifestUri, mBaseFolder, null, OfflineUtil.VIDEO_HEIGHT_WILDCARD, streamProvider);
+    public OfflineStreamProvider(String mId, String mManifestUrl, File mBaseFolder, IVideoStreamDataSourceProvider streamProvider, IDataSourceProvider dataSourceProvider) {
+        this(mId, mManifestUrl, mBaseFolder, null, OfflineUtil.VIDEO_HEIGHT_WILDCARD, streamProvider, dataSourceProvider);
     }
 
-    public OfflineStreamProvider(String mId, Uri mManifestUri, File mBaseFolder, String encryptionKey, int videoHeight, IVideoStreamDataSourceProvider streamProvider) {
+    public OfflineStreamProvider(String mId, String mManifestUrl, File mBaseFolder, String encryptionKey, int videoHeight, IVideoStreamDataSourceProvider streamProvider, IDataSourceProvider dataSourceProvider) {
         this.mId = mId;
         this.mBaseFolder = mBaseFolder;
-        this.mManifestUri = mManifestUri;
+        this.mManifestUrl = mManifestUrl;
         this.mBaseStreamProvider = streamProvider;
         mEncryptionKey = encryptionKey;
         mVideoHeight = videoHeight;
+        mDataSourceProvider = dataSourceProvider;
     }
 
     @Override
@@ -48,7 +49,7 @@ public class OfflineStreamProvider implements IVideoStreamDataSourceProvider {
             return OfflineUtil.loadCache(mBaseFolder, mId, mEncryptionKey);
         } else {
             try {
-                return OfflineUtil.downloadAndLoad(mBaseFolder, mId, mManifestUri, mEncryptionKey, mVideoHeight);
+                return mDataSourceProvider.downloadAndLoad(mBaseFolder, mId, mManifestUrl, mEncryptionKey, mVideoHeight);
             } catch (Exception e) {
                 e.printStackTrace();
                 return mBaseStreamProvider.createDataSource();

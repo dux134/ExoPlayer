@@ -50,7 +50,7 @@
 
 
         <activity
-            android:name="com.google.android.exoplayer2.demo.SampleChooserActivity2"
+            android:name="com.google.android.exoplayer2.demo.SampleChooserActivity3_Hls"
             android:configChanges="keyboardHidden"
             android:label="@string/application_name">
             <intent-filter>
@@ -98,7 +98,7 @@
         </activity>
 
         <activity
-            android:name="com.google.android.exoplayer2.demo.PlayerActivity2"
+            android:name="com.google.android.exoplayer2.demo.PlayerActivity3_Hls"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:label="@string/application_name"
             android:launchMode="singleTop"

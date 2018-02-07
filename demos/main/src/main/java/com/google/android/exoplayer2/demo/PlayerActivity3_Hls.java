@@ -23,7 +23,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -46,18 +45,15 @@ import com.google.android.exoplayer2.drm.UnsupportedDrmException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer.DecoderInitializationException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil.DecoderQueryException;
 import com.google.android.exoplayer2.offline.dataprovider.license.ILicenseProvider;
-import com.google.android.exoplayer2.offline.dataprovider.license.OfflineLicenseProvider;
-import com.google.android.exoplayer2.offline.dataprovider.license.OnlineLicenseProvider;
-import com.google.android.exoplayer2.offline.dataprovider.source.DashDataSourceProvider;
-import com.google.android.exoplayer2.offline.dataprovider.stream.DrmOnlineStreamProvider;
+import com.google.android.exoplayer2.offline.dataprovider.source.HlsDataSourceProvider;
+import com.google.android.exoplayer2.offline.dataprovider.stream.HlsOnlineStreamProvider;
 import com.google.android.exoplayer2.offline.dataprovider.stream.IVideoStreamDataSourceProvider;
 import com.google.android.exoplayer2.offline.dataprovider.stream.OfflineStreamProvider;
 import com.google.android.exoplayer2.source.BehindLiveWindowException;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.MediaSourceEventListener;
 import com.google.android.exoplayer2.source.TrackGroupArray;
-import com.google.android.exoplayer2.source.dash.DashMediaSource;
-import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
+import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector.MappedTrackInfo;
@@ -75,21 +71,15 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
-
 /**
  * An activity that plays media using {@link SimpleExoPlayer}.
  */
-public class PlayerActivity2 extends Activity implements OnClickListener,
+public class PlayerActivity3_Hls extends Activity implements OnClickListener,
         PlaybackControlView.VisibilityListener {
 
 
-    public static final String DRM_LICENSE_URL = "drm_license_url";
-    public static final String DRM_KEY_REQUEST_PROPERTIES = "drm_key_request_properties";
-
     public static final String ACTION_VIEW = "com.google.android.exoplayer.demo.action.VIEW";
+    public static final String EXTENSION_EXTRA = "extension";
 
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
     private static final CookieManager DEFAULT_COOKIE_MANAGER;
@@ -242,61 +232,25 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
         lastSeenTrackGroupArray = null;
         eventLogger = new EventLogger(trackSelector);
 
-        String drmLicenseUrl = intent.getStringExtra(DRM_LICENSE_URL);
-        String[] keyRequestPropertiesArray = intent.getStringArrayExtra(DRM_KEY_REQUEST_PROPERTIES);
-        int errorStringId = R.string.error_drm_unknown;
-        if (Util.SDK_INT < 18) {
-            errorStringId = R.string.error_drm_not_supported;
-            showToast(errorStringId);
-
-            return;
-
-        }
-
-//        String key = "123";
         String key = null;
 
 
         String videoId = getVideoId();
         File baseFolder = new File(getExternalCacheDir(), "offline_samples");
 
-        MediaDrmCallback mediaDrmCallback = getMediaDrmCallback(drmLicenseUrl, keyRequestPropertiesArray);
 
-        mLicenseProvider = new OnlineLicenseProvider(getHttpFactory(), mediaDrmCallback, playingUri);
-        mVideoStreamProvider = new DrmOnlineStreamProvider(mediaDrmCallback, null);
+        mVideoStreamProvider = new HlsOnlineStreamProvider(null);
 
 
         if (DemoUtil.isCacheNeeded(videoId)) {
-            mLicenseProvider = new OfflineLicenseProvider(videoId, baseFolder, mLicenseProvider, key);
-            mVideoStreamProvider = new OfflineStreamProvider(videoId, uriString, baseFolder, key, 180, mVideoStreamProvider, new DashDataSourceProvider());
+            mVideoStreamProvider = new OfflineStreamProvider(videoId, uriString, baseFolder, key, 180, mVideoStreamProvider, new HlsDataSourceProvider());
 
         }
 
-        buildDrmStream();
+        onLicenseGenerated(null);
 
     }
 
-    private void buildDrmStream() {
-
-        mLicenseProvider.loadLicense2()
-                .subscribeOn(Schedulers.computation())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<byte[]>() {
-                    @Override
-                    public void accept(byte[] keyId) throws Exception {
-
-                        long licensePeriodLeft = mLicenseProvider.getLicensePeriodLeft(keyId);
-                        Log.d("License_Left", "Left:"+licensePeriodLeft);
-                        onLicenseGenerated(keyId);
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable e) throws Exception {
-                        e.printStackTrace();
-
-                    }
-                });
-    }
 
     private void onLicenseGenerated(byte[] keyId) {
 
@@ -363,18 +317,10 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
     }
 
     private MediaSource buildMediaSource(Uri uri, @Nullable Handler handler, @Nullable MediaSourceEventListener listener) {
-        return buildDashMediaSource(uri, handler, listener);
 
-    }
-
-    private MediaSource buildDashMediaSource(Uri uri, @Nullable Handler handler,
-                                             @Nullable MediaSourceEventListener listener) {
-
-
-        return new DashMediaSource.Factory(
-                new DefaultDashChunkSource.Factory(mVideoStreamProvider),
-                mVideoStreamProvider)
+        return new HlsMediaSource.Factory(mVideoStreamProvider)
                 .createMediaSource(uri, handler, listener);
+
 
     }
 

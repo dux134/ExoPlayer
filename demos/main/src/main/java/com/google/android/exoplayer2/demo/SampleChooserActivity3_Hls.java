@@ -35,11 +35,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.ParserException;
-import com.google.android.exoplayer2.drm.MediaDrmCallback;
-import com.google.android.exoplayer2.offline.DashOfflineUtil;
+import com.google.android.exoplayer2.offline.HlsOfflineUtil;
 import com.google.android.exoplayer2.offline.OfflineUtil;
-import com.google.android.exoplayer2.offline.dataprovider.license.OfflineLicenseProvider;
-import com.google.android.exoplayer2.offline.dataprovider.license.OnlineLicenseProvider;
 import com.google.android.exoplayer2.offline.models.CacheInfo;
 import com.google.android.exoplayer2.offline.models.DownloadInfo;
 import com.google.android.exoplayer2.upstream.DataSource;
@@ -61,13 +58,12 @@ import java.util.List;
 import io.reactivex.Flowable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 /**
  * An activity for selecting from a list of samples.
  */
-public class SampleChooserActivity2 extends Activity {
+public class SampleChooserActivity3_Hls extends Activity {
 
     private static final String TAG = "SampleChooserActivity";
 
@@ -292,8 +288,6 @@ public class SampleChooserActivity2 extends Activity {
             UriSample child = (UriSample) getChild(groupPosition, childPosition);
 
             final String name = child.name;
-            String lice = child.drmInfo.drmLicenseUrl;
-            String[] req = child.drmInfo.drmKeyRequestProperties;
             final String uriString = child.uri;
             final Uri playUri = Uri.parse(uriString);
 
@@ -305,11 +299,7 @@ public class SampleChooserActivity2 extends Activity {
 
             DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("ExoPlayer", null);
 
-            MediaDrmCallback drmCallback = DemoUtil.getMediaDrmCallback(lice, factory, req);
 
-
-            OnlineLicenseProvider onlineLicenseProvider = new OnlineLicenseProvider(factory, drmCallback, playUri);
-            final OfflineLicenseProvider offlineLicenseProvider = new OfflineLicenseProvider(name, baseFolder, onlineLicenseProvider, key);
 
             textView.setText(child.name);
             progressBar.setProgress(0);
@@ -327,21 +317,13 @@ public class SampleChooserActivity2 extends Activity {
                     @Override
                     public boolean onLongClick(final View view) {
 
-                        Flowable<byte[]> licenseFlowable = offlineLicenseProvider.loadLicense2();
 
-                        final Flowable<DownloadInfo> contentFlowable = DashOfflineUtil.downloadAsync(baseFolder, name, uriString, key, 180);
-
-                        Flowable<DownloadInfo> finalFlowable = licenseFlowable.flatMap(new Function<byte[], Flowable<DownloadInfo>>() {
-                            @Override
-                            public Flowable<DownloadInfo> apply(byte[] bytes) throws Exception {
-                                return contentFlowable;
-                            }
-                        })
+                        final Flowable<DownloadInfo> contentFlowable = HlsOfflineUtil.downloadAsync(baseFolder, name, uriString, key, 270)
                                 .subscribeOn(Schedulers.computation())
                                 .observeOn(AndroidSchedulers.mainThread());
 
 
-                        finalFlowable.subscribe(new Consumer<DownloadInfo>() {
+                        contentFlowable.subscribe(new Consumer<DownloadInfo>() {
                             @Override
                             public void accept(DownloadInfo downloadInfo) throws Exception {
                                 int downloadPercent = (int) downloadInfo.downloadPercent;
@@ -354,7 +336,7 @@ public class SampleChooserActivity2 extends Activity {
                         }, new Consumer<Throwable>() {
                             @Override
                             public void accept(Throwable throwable) throws Exception {
-
+                                throwable.printStackTrace();
                             }
                         });
 
@@ -435,8 +417,6 @@ public class SampleChooserActivity2 extends Activity {
 
         public void updateIntent(Intent intent) {
             Assertions.checkNotNull(intent);
-            intent.putExtra(PlayerActivity2.DRM_LICENSE_URL, drmLicenseUrl);
-            intent.putExtra(PlayerActivity2.DRM_KEY_REQUEST_PROPERTIES, drmKeyRequestProperties);
         }
     }
 
@@ -450,7 +430,7 @@ public class SampleChooserActivity2 extends Activity {
         }
 
         public Intent buildIntent(Context context) {
-            Intent intent = new Intent(context, PlayerActivity2.class);
+            Intent intent = new Intent(context, PlayerActivity3_Hls.class);
             intent.putExtra(PlayerActivity2.VIDEO_NAME, name);
 
             if (drmInfo != null) {
@@ -478,7 +458,7 @@ public class SampleChooserActivity2 extends Activity {
         public Intent buildIntent(Context context) {
             return super.buildIntent(context)
                     .setData(Uri.parse(uri))
-                    .setAction(PlayerActivity2.ACTION_VIEW);
+                    .setAction(PlayerActivity3_Hls.ACTION_VIEW);
         }
 
     }
