@@ -1,5 +1,6 @@
 package com.google.android.exoplayer2.offline.dataprovider.source;
 
+import com.google.android.exoplayer2.offline.dataprovider.stream.HttpDataSourceFactoryBuilder;
 import com.google.android.exoplayer2.upstream.DataSource;
 
 import java.io.File;
@@ -18,7 +19,8 @@ public interface IDataSourceProvider {
      * @param manifestUrl            - target video manifest url
      * @param key                    - Encryption key if any.
      * @param targetVideoPixelHeight - Target video height.
+     * @param factoryBuilder - Main source builder.
      * @return - Video stream as data source.
      */
-    DataSource downloadAndLoad(File baseFolder, String id, String manifestUrl, String key, int targetVideoPixelHeight) throws Exception;
+    DataSource downloadAndLoad(File baseFolder, String id, String manifestUrl, String key, HttpDataSourceFactoryBuilder factoryBuilder, int targetVideoPixelHeight) throws Exception;
 }

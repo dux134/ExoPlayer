@@ -3,6 +3,7 @@ package com.google.android.exoplayer2.offline;
 import android.net.Uri;
 import android.util.Log;
 
+import com.google.android.exoplayer2.offline.dataprovider.stream.HttpDataSourceFactoryBuilder;
 import com.google.android.exoplayer2.offline.models.CacheInfo;
 import com.google.android.exoplayer2.offline.models.DownloadInfo;
 import com.google.android.exoplayer2.source.dash.DashUtil;
@@ -27,8 +28,6 @@ import io.reactivex.FlowableEmitter;
 import io.reactivex.FlowableOnSubscribe;
 
 import static com.google.android.exoplayer2.offline.OfflineUtil.get16ByteSecretKey;
-import static com.google.android.exoplayer2.offline.OfflineUtil.isCacheAvailable;
-import static com.google.android.exoplayer2.offline.OfflineUtil.loadCache;
 import static com.google.android.exoplayer2.offline.OfflineUtil.storeCacheInfo;
 
 /**
@@ -48,14 +47,14 @@ public class DashOfflineUtil {
      * @param targetVideoPixelHeight - Target video height.
      * @return - Rx Flowable reference for async downloading.
      */
-    public static Flowable<DownloadInfo> downloadAsync(final File downloadFolder, final String id, final String manifestUrl, final String key, final int targetVideoPixelHeight) {
+    public static Flowable<DownloadInfo> downloadAsync(final File downloadFolder, final String id, final String manifestUrl, final String key, final int targetVideoPixelHeight, final HttpDataSourceFactoryBuilder factoryBuilder) {
 
         return Flowable.create(new FlowableOnSubscribe<DownloadInfo>() {
             @Override
             public void subscribe(final FlowableEmitter<DownloadInfo> e) throws Exception {
 
                 try {
-                    downloadSync(downloadFolder, id, manifestUrl, key, targetVideoPixelHeight, new Downloader.ProgressListener() {
+                    downloadSync(downloadFolder, id, manifestUrl, key, targetVideoPixelHeight, factoryBuilder, new Downloader.ProgressListener() {
                         @Override
                         public void onDownloadProgress(Downloader downloader, float downloadPercentage, long downloadedBytes) {
 
@@ -69,8 +68,8 @@ public class DashOfflineUtil {
                             }
                         }
                     });
-                }catch (InterruptedException e1) {
-                    if(e.isCancelled()) return;
+                } catch (InterruptedException e1) {
+                    if (e.isCancelled()) return;
                     throw e1;
                 }
 
@@ -79,7 +78,6 @@ public class DashOfflineUtil {
 
         }, BackpressureStrategy.BUFFER);
     }
-
 
 
     private static RepresentationKey[] getRepresentationKeys(DashManifest dashManifest, int pixelHeight) {
@@ -113,7 +111,7 @@ public class DashOfflineUtil {
 
     }
 
-    public static void downloadSync(final File baseFolder, final String id, final String manifestUrl, final String key, int targetVideoPixelHeight, final Downloader.ProgressListener listener) throws Exception {
+    public static void downloadSync(final File baseFolder, final String id, final String manifestUrl, final String key, int targetVideoPixelHeight, HttpDataSourceFactoryBuilder factoryBuilder, final Downloader.ProgressListener listener) throws Exception {
 
         if (!baseFolder.exists()) {
             baseFolder.mkdir();
@@ -131,7 +129,7 @@ public class DashOfflineUtil {
         Uri uri = Uri.parse(manifestUrl);
 
         SimpleCache cache = new SimpleCache(manifestFolder, new NoOpCacheEvictor(), secretKey);
-        DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("ExoPlayer", null);
+        DefaultHttpDataSourceFactory factory = factoryBuilder.build();
         DownloaderConstructorHelper constructorHelper =
                 new DownloaderConstructorHelper(cache, factory);
 

@@ -50,6 +50,7 @@ import com.google.android.exoplayer2.offline.dataprovider.license.OfflineLicense
 import com.google.android.exoplayer2.offline.dataprovider.license.OnlineLicenseProvider;
 import com.google.android.exoplayer2.offline.dataprovider.source.DashDataSourceProvider;
 import com.google.android.exoplayer2.offline.dataprovider.stream.DrmOnlineStreamProvider;
+import com.google.android.exoplayer2.offline.dataprovider.stream.HttpDataSourceFactoryBuilder;
 import com.google.android.exoplayer2.offline.dataprovider.stream.IVideoStreamDataSourceProvider;
 import com.google.android.exoplayer2.offline.dataprovider.stream.OfflineStreamProvider;
 import com.google.android.exoplayer2.source.BehindLiveWindowException;
@@ -262,13 +263,23 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
 
         MediaDrmCallback mediaDrmCallback = getMediaDrmCallback(drmLicenseUrl, keyRequestPropertiesArray);
 
+        HttpDataSourceFactoryBuilder factoryBuilder = new HttpDataSourceFactoryBuilder("Exo");
+
+        if(keyRequestPropertiesArray != null) {
+
+            for (int i = 0; i < keyRequestPropertiesArray.length; i+=2) {
+                factoryBuilder.addRequestProperties(keyRequestPropertiesArray[i], keyRequestPropertiesArray[i+1]);
+            }
+
+        }
+
         mLicenseProvider = new OnlineLicenseProvider(getHttpFactory(), mediaDrmCallback, playingUri);
         mVideoStreamProvider = new DrmOnlineStreamProvider(mediaDrmCallback, null);
 
 
         if (DemoUtil.isCacheNeeded(videoId)) {
             mLicenseProvider = new OfflineLicenseProvider(videoId, baseFolder, mLicenseProvider, key);
-            mVideoStreamProvider = new OfflineStreamProvider(videoId, uriString, baseFolder, key, 180, mVideoStreamProvider, new DashDataSourceProvider());
+            mVideoStreamProvider = new OfflineStreamProvider(videoId, uriString, baseFolder, key, 180, factoryBuilder, mVideoStreamProvider, new DashDataSourceProvider());
 
         }
 

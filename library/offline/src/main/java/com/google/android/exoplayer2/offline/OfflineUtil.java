@@ -2,6 +2,7 @@ package com.google.android.exoplayer2.offline;
 
 import android.support.annotation.Nullable;
 
+import com.google.android.exoplayer2.offline.dataprovider.stream.HttpDataSourceFactoryBuilder;
 import com.google.android.exoplayer2.offline.models.CacheInfo;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource;
@@ -23,9 +24,10 @@ public class OfflineUtil {
 
     /**
      * Reads the Cache info.
+     *
      * @param baseDownloadDirectory - base download directory where the info is stored.
-     * @param id - Unique id
-     * @param key - Encryption key if any.
+     * @param id                    - Unique id
+     * @param key                   - Encryption key if any.
      * @return - Cache info of the video if found, null otherwise.
      */
     public static CacheInfo getCacheInfo(File baseDownloadDirectory, String id, String key) {
@@ -53,15 +55,34 @@ public class OfflineUtil {
 
     /**
      * Tells whether cache is available for the video or not.
+     *
      * @param baseDownloadDirectory - base download directory where the info is stored.
-     * @param id - Unique id
-     * @param key - Encryption key if any.
+     * @param id                    - Unique id
+     * @param key                   - Encryption key if any.
      * @return - true when cache download percent is greater than zero, false otherwise.
      */
     public static boolean isCacheAvailable(File baseDownloadDirectory, String id, String key) {
         CacheInfo cacheInfo = getCacheInfo(baseDownloadDirectory, id, key);
         return cacheInfo != null && cacheInfo.getDownloadPercent() > 0;
     }
+
+//    /**
+//     * Loads the cache data source for the given video id.
+//     *
+//     * @param baseDirectory - Directory where all the cache resides
+//     * @param id            - unique id of the video to pick the video
+//     * @param key           - decryption key.
+//     * @return - cache data source.
+//     */
+//    public static CacheDataSource loadCache(File baseDirectory, String id, @Nullable String key) {
+//
+//        File manifestFolder = new File(baseDirectory, id);
+//
+//        byte[] secretKey = get16ByteSecretKey(key);
+//        SimpleCache cache = new SimpleCache(manifestFolder, new NoOpCacheEvictor(), secretKey);
+//        DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("ExoPlayer", null);
+//        return new CacheDataSource(cache, factory.createDataSource(), CacheDataSource.FLAG_BLOCK_ON_CACHE);
+//    }
 
     /**
      * Loads the cache data source for the given video id.
@@ -71,13 +92,13 @@ public class OfflineUtil {
      * @param key           - decryption key.
      * @return - cache data source.
      */
-    public static CacheDataSource loadCache(File baseDirectory, String id, @Nullable String key) {
+    public static CacheDataSource loadCache(File baseDirectory, String id, @Nullable String key, HttpDataSourceFactoryBuilder factoryBuilder) {
 
         File manifestFolder = new File(baseDirectory, id);
 
         byte[] secretKey = get16ByteSecretKey(key);
         SimpleCache cache = new SimpleCache(manifestFolder, new NoOpCacheEvictor(), secretKey);
-        DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("ExoPlayer", null);
+        DefaultHttpDataSourceFactory factory = factoryBuilder.build();
         return new CacheDataSource(cache, factory.createDataSource(), CacheDataSource.FLAG_BLOCK_ON_CACHE);
     }
 

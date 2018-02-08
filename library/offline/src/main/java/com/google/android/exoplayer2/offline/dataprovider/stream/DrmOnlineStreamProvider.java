@@ -8,7 +8,6 @@ import com.google.android.exoplayer2.drm.MediaDrmCallback;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 
 /**
  * Created by sharish on 22/01/18.
@@ -19,25 +18,25 @@ public class DrmOnlineStreamProvider implements IVideoStreamDataSourceProvider {
     private Handler mMainHandler;
     private MediaDrmCallback mMediaDrmCallback;
     private DefaultDrmSessionManager.EventListener mEventListener;
-    private DefaultBandwidthMeter mBandwidthMeter;
+    private HttpDataSourceFactoryBuilder mFactoryBuilder;
 
 
-    public DrmOnlineStreamProvider(MediaDrmCallback mMediaDrmCallback, DefaultBandwidthMeter bandwidthMeter) {
+    public DrmOnlineStreamProvider(MediaDrmCallback mMediaDrmCallback, HttpDataSourceFactoryBuilder factoryBuilder) {
         this.mMediaDrmCallback = mMediaDrmCallback;
-        this.mBandwidthMeter = bandwidthMeter;
+        this.mFactoryBuilder = factoryBuilder;
     }
 
-    public DrmOnlineStreamProvider(MediaDrmCallback mMediaDrmCallback, Handler mMainHandler, DefaultDrmSessionManager.EventListener mEventListener, DefaultBandwidthMeter bandwidthMeter) {
+    public DrmOnlineStreamProvider(MediaDrmCallback mMediaDrmCallback, Handler mMainHandler, DefaultDrmSessionManager.EventListener mEventListener, HttpDataSourceFactoryBuilder factoryBuilder) {
         this.mMainHandler = mMainHandler;
         this.mMediaDrmCallback = mMediaDrmCallback;
         this.mEventListener = mEventListener;
-        this.mBandwidthMeter = bandwidthMeter;
+        this.mFactoryBuilder = factoryBuilder;
 
     }
 
     @Override
     public DataSource createDataSource() {
-        return new DefaultHttpDataSourceFactory("ExoPlayer", mBandwidthMeter).createDataSource();
+        return mFactoryBuilder.build().createDataSource();
     }
 
     @Override

@@ -40,6 +40,7 @@ import com.google.android.exoplayer2.offline.DashOfflineUtil;
 import com.google.android.exoplayer2.offline.OfflineUtil;
 import com.google.android.exoplayer2.offline.dataprovider.license.OfflineLicenseProvider;
 import com.google.android.exoplayer2.offline.dataprovider.license.OnlineLicenseProvider;
+import com.google.android.exoplayer2.offline.dataprovider.stream.HttpDataSourceFactoryBuilder;
 import com.google.android.exoplayer2.offline.models.CacheInfo;
 import com.google.android.exoplayer2.offline.models.DownloadInfo;
 import com.google.android.exoplayer2.upstream.DataSource;
@@ -293,7 +294,7 @@ public class SampleChooserActivity2 extends Activity {
 
             final String name = child.name;
             String lice = child.drmInfo.drmLicenseUrl;
-            String[] req = child.drmInfo.drmKeyRequestProperties;
+            final String[] req = child.drmInfo.drmKeyRequestProperties;
             final String uriString = child.uri;
             final Uri playUri = Uri.parse(uriString);
 
@@ -329,7 +330,17 @@ public class SampleChooserActivity2 extends Activity {
 
                         Flowable<byte[]> licenseFlowable = offlineLicenseProvider.loadLicense2();
 
-                        final Flowable<DownloadInfo> contentFlowable = DashOfflineUtil.downloadAsync(baseFolder, name, uriString, key, 180);
+                        HttpDataSourceFactoryBuilder factoryBuilder = new HttpDataSourceFactoryBuilder("Exo");
+
+                        if(req != null) {
+
+                            for (int i = 0; i < req.length; i+=2) {
+                                factoryBuilder.addRequestProperties(req[i], req[i+1]);
+                            }
+
+                        }
+
+                        final Flowable<DownloadInfo> contentFlowable = DashOfflineUtil.downloadAsync(baseFolder, name, uriString, key, 180, factoryBuilder);
 
                         Flowable<DownloadInfo> finalFlowable = licenseFlowable.flatMap(new Function<byte[], Flowable<DownloadInfo>>() {
                             @Override

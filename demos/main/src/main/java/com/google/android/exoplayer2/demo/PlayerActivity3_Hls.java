@@ -35,27 +35,32 @@ import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.RendererCapabilities;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.drm.DefaultDrmSessionManager;
 import com.google.android.exoplayer2.drm.DrmSessionManager;
 import com.google.android.exoplayer2.drm.FrameworkMediaCrypto;
-import com.google.android.exoplayer2.drm.MediaDrmCallback;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer.DecoderInitializationException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil.DecoderQueryException;
 import com.google.android.exoplayer2.offline.dataprovider.license.ILicenseProvider;
 import com.google.android.exoplayer2.offline.dataprovider.source.HlsDataSourceProvider;
 import com.google.android.exoplayer2.offline.dataprovider.stream.HlsOnlineStreamProvider;
+import com.google.android.exoplayer2.offline.dataprovider.stream.HttpDataSourceFactoryBuilder;
 import com.google.android.exoplayer2.offline.dataprovider.stream.IVideoStreamDataSourceProvider;
 import com.google.android.exoplayer2.offline.dataprovider.stream.OfflineStreamProvider;
 import com.google.android.exoplayer2.source.BehindLiveWindowException;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.MediaSourceEventListener;
+import com.google.android.exoplayer2.source.TrackGroup;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.FixedTrackSelection;
+import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector.MappedTrackInfo;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
@@ -77,6 +82,8 @@ import java.net.CookiePolicy;
 public class PlayerActivity3_Hls extends Activity implements OnClickListener,
         PlaybackControlView.VisibilityListener {
 
+    public static final String HHH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vZGFpbHlyb3VuZHMub3JnL3Rlc3QvIiwiYXVkIjoidXJuOmNvbnRvc28iLCJleHAiOjE1MTgwNzgwMDR9.ddImVivWAUU-zrw89Z962EsBEjQ_datesL0cTbhGPyQ";
+    public static final int PIXEL_HEIGHT = 180;
 
     public static final String ACTION_VIEW = "com.google.android.exoplayer.demo.action.VIEW";
     public static final String EXTENSION_EXTRA = "extension";
@@ -107,10 +114,6 @@ public class PlayerActivity3_Hls extends Activity implements OnClickListener,
     private boolean shouldAutoPlay;
     private int resumeWindow;
     private long resumePosition;
-
-    // Fields used only for ad playback. The ads loader is loaded via reflection.
-
-    private ILicenseProvider mLicenseProvider;
 
     private IVideoStreamDataSourceProvider mVideoStreamProvider;
 
@@ -225,9 +228,45 @@ public class PlayerActivity3_Hls extends Activity implements OnClickListener,
             return;
         }
 
+
         TrackSelection.Factory adaptiveTrackSelectionFactory =
                 new AdaptiveTrackSelection.Factory(BANDWIDTH_METER);
-        trackSelector = new DefaultTrackSelector(adaptiveTrackSelectionFactory);
+        trackSelector = new DefaultTrackSelector(adaptiveTrackSelectionFactory) {
+
+            protected TrackSelection selectVideoTrack(RendererCapabilities rendererCapabilities,
+                                                      TrackGroupArray groups, int[][] formatSupport, Parameters params,
+                                                      TrackSelection.Factory adaptiveTrackSelectionFactory) throws ExoPlaybackException {
+
+
+                for (int groupIndex = 0; groupIndex < groups.length; groupIndex++) {
+
+                    TrackGroup trackGroup = groups.get(groupIndex);
+                    int[] trackFormatSupport = formatSupport[groupIndex];
+                    for (int trackIndex = 0; trackIndex < trackGroup.length; trackIndex++) {
+
+                        if (isSupported(trackFormatSupport[trackIndex],
+                                params.exceedRendererCapabilitiesIfNecessary)) {
+                            Format format = trackGroup.getFormat(trackIndex);
+
+                            if (format.height == PIXEL_HEIGHT) {
+
+                                MappingTrackSelector.SelectionOverride override =
+                                        new MappingTrackSelector.SelectionOverride(new FixedTrackSelection.Factory(),
+                                                groupIndex, trackIndex);
+
+                                setSelectionOverride(groupIndex, groups, override);
+
+                                groupIndex = groups.length; // breaking outerloop as well.
+                                break;
+                            }
+
+                        }
+                    }
+                }
+
+                return super.selectVideoTrack(rendererCapabilities, groups, formatSupport, params, adaptiveTrackSelectionFactory);
+            }
+        };
         trackSelectionHelper = new TrackSelectionHelper(trackSelector, adaptiveTrackSelectionFactory);
         lastSeenTrackGroupArray = null;
         eventLogger = new EventLogger(trackSelector);
@@ -242,8 +281,13 @@ public class PlayerActivity3_Hls extends Activity implements OnClickListener,
         mVideoStreamProvider = new HlsOnlineStreamProvider(null);
 
 
+        HttpDataSourceFactoryBuilder builder = new HttpDataSourceFactoryBuilder("Exo");
+        builder.addRequestProperties("Authorization", "Bearer "+HHH_TOKEN);
+
+
+
         if (DemoUtil.isCacheNeeded(videoId)) {
-            mVideoStreamProvider = new OfflineStreamProvider(videoId, uriString, baseFolder, key, 180, mVideoStreamProvider, new HlsDataSourceProvider());
+            mVideoStreamProvider = new OfflineStreamProvider(videoId, uriString, baseFolder, key, PIXEL_HEIGHT, builder, mVideoStreamProvider, new HlsDataSourceProvider());
 
         }
 
@@ -324,14 +368,6 @@ public class PlayerActivity3_Hls extends Activity implements OnClickListener,
 
     }
 
-    private HttpDataSource.Factory getHttpFactory() {
-        return buildHttpDataSourceFactory(false);
-    }
-
-
-    private MediaDrmCallback getMediaDrmCallback(String licenseUrl, String[] keyRequestPropertiesArray) {
-        return DemoUtil.getMediaDrmCallback(licenseUrl, getHttpFactory(), keyRequestPropertiesArray);
-    }
 
     private String getVideoId() {
         return getIntent().getStringExtra(VIDEO_NAME);

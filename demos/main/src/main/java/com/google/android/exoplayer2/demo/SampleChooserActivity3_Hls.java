@@ -37,6 +37,7 @@ import android.widget.Toast;
 import com.google.android.exoplayer2.ParserException;
 import com.google.android.exoplayer2.offline.HlsOfflineUtil;
 import com.google.android.exoplayer2.offline.OfflineUtil;
+import com.google.android.exoplayer2.offline.dataprovider.stream.HttpDataSourceFactoryBuilder;
 import com.google.android.exoplayer2.offline.models.CacheInfo;
 import com.google.android.exoplayer2.offline.models.DownloadInfo;
 import com.google.android.exoplayer2.upstream.DataSource;
@@ -59,6 +60,9 @@ import io.reactivex.Flowable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+
+import static com.google.android.exoplayer2.demo.PlayerActivity3_Hls.HHH_TOKEN;
+import static com.google.android.exoplayer2.demo.PlayerActivity3_Hls.PIXEL_HEIGHT;
 
 /**
  * An activity for selecting from a list of samples.
@@ -317,8 +321,11 @@ public class SampleChooserActivity3_Hls extends Activity {
                     @Override
                     public boolean onLongClick(final View view) {
 
+                        HttpDataSourceFactoryBuilder builder = new HttpDataSourceFactoryBuilder("Exo");
+                        builder.addRequestProperties("Authorization", "Bearer "+HHH_TOKEN);
 
-                        final Flowable<DownloadInfo> contentFlowable = HlsOfflineUtil.downloadAsync(baseFolder, name, uriString, key, 270)
+
+                        final Flowable<DownloadInfo> contentFlowable = HlsOfflineUtil.downloadAsync(baseFolder, name, uriString, key, PIXEL_HEIGHT, builder)
                                 .subscribeOn(Schedulers.computation())
                                 .observeOn(AndroidSchedulers.mainThread());
 

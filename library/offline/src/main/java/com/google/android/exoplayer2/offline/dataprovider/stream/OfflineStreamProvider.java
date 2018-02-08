@@ -23,12 +23,13 @@ public class OfflineStreamProvider implements IVideoStreamDataSourceProvider {
     private String mEncryptionKey;
     private int mVideoHeight = OfflineUtil.VIDEO_HEIGHT_WILDCARD;
     private IDataSourceProvider mDataSourceProvider;
+    private HttpDataSourceFactoryBuilder mFactoryBuilder;
 
-    public OfflineStreamProvider(String mId, String mManifestUrl, File mBaseFolder, IVideoStreamDataSourceProvider streamProvider, IDataSourceProvider dataSourceProvider) {
-        this(mId, mManifestUrl, mBaseFolder, null, OfflineUtil.VIDEO_HEIGHT_WILDCARD, streamProvider, dataSourceProvider);
-    }
+//    public OfflineStreamProvider(String mId, String mManifestUrl, File mBaseFolder, IVideoStreamDataSourceProvider streamProvider, IDataSourceProvider dataSourceProvider) {
+//        this(mId, mManifestUrl, mBaseFolder, null, OfflineUtil.VIDEO_HEIGHT_WILDCARD, null, streamProvider, dataSourceProvider);
+//    }
 
-    public OfflineStreamProvider(String mId, String mManifestUrl, File mBaseFolder, String encryptionKey, int videoHeight, IVideoStreamDataSourceProvider streamProvider, IDataSourceProvider dataSourceProvider) {
+    public OfflineStreamProvider(String mId, String mManifestUrl, File mBaseFolder, String encryptionKey, int videoHeight, HttpDataSourceFactoryBuilder factoryBuilder, IVideoStreamDataSourceProvider streamProvider, IDataSourceProvider dataSourceProvider) {
         this.mId = mId;
         this.mBaseFolder = mBaseFolder;
         this.mManifestUrl = mManifestUrl;
@@ -36,6 +37,7 @@ public class OfflineStreamProvider implements IVideoStreamDataSourceProvider {
         mEncryptionKey = encryptionKey;
         mVideoHeight = videoHeight;
         mDataSourceProvider = dataSourceProvider;
+        mFactoryBuilder = factoryBuilder;
     }
 
     @Override
@@ -46,10 +48,10 @@ public class OfflineStreamProvider implements IVideoStreamDataSourceProvider {
         }
 
         if (OfflineUtil.isCacheAvailable(mBaseFolder, mId, mEncryptionKey)) {
-            return OfflineUtil.loadCache(mBaseFolder, mId, mEncryptionKey);
+            return OfflineUtil.loadCache(mBaseFolder, mId, mEncryptionKey, mFactoryBuilder);
         } else {
             try {
-                return mDataSourceProvider.downloadAndLoad(mBaseFolder, mId, mManifestUrl, mEncryptionKey, mVideoHeight);
+                return mDataSourceProvider.downloadAndLoad(mBaseFolder, mId, mManifestUrl, mEncryptionKey, mFactoryBuilder, mVideoHeight);
             } catch (Exception e) {
                 e.printStackTrace();
                 return mBaseStreamProvider.createDataSource();

@@ -3,14 +3,17 @@
     "name": "Widevine DASH: MP4,H264",
     "samples": [
       {
-        "name": "C_Staging___Sample",
+        "name": "C_APPLE",
         "uri": "https://tungsten.aaplimg.com/VOD/bipbop_adv_example_v2/master.m3u8"
       },
       {
-        "name": "Staging___Sample",
-        "uri": "https://tungsten.aaplimg.com/VOD/bipbop_adv_example_v2/master.m3u8"
+        "name": "C_PROD",
+        "uri": "https://drvideo.streaming.mediaservices.windows.net/33148600-36bf-4de1-8a3f-b7efe3c84c16/779.ism/manifest(format=m3u8-aapl)"
+      },
+      {
+        "name": "C_Azure_Sample",
+        "uri": "https://drvideo.streaming.mediaservices.windows.net/cffcfd5a-beaa-48d3-9076-0e93c5525063/ee736ee45cfd46ca967da0646f3e46dc_wm_comp.ism/manifest(format=m3u8-aapl)"
       }
-
     ]
   }
 ]

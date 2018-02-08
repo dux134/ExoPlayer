@@ -13,15 +13,15 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 
 public class HlsOnlineStreamProvider implements IVideoStreamDataSourceProvider {
 
-    private DefaultBandwidthMeter mBandwidthMeter;
+    private HttpDataSourceFactoryBuilder mFactoryBuilder;
 
-    public HlsOnlineStreamProvider(DefaultBandwidthMeter mBandwidthMeter) {
-        this.mBandwidthMeter = mBandwidthMeter;
+    public HlsOnlineStreamProvider(HttpDataSourceFactoryBuilder mFactoryBuilder) {
+        this.mFactoryBuilder = mFactoryBuilder;
     }
 
     @Override
     public DataSource createDataSource() {
-        return new DefaultHttpDataSourceFactory("ExoPlayer", mBandwidthMeter).createDataSource();
+        return mFactoryBuilder.build().createDataSource();
     }
 
     @Override
