@@ -45,13 +45,23 @@ public class OnlineLicenseProvider implements ILicenseProvider {
         return Flowable.create(new FlowableOnSubscribe<byte[]>() {
             @Override
             public void subscribe(FlowableEmitter<byte[]> e) throws Exception {
-                byte[] keyId = loadLicenseSync();
 
-                if (keyId != null) {
-                    e.onNext(keyId);
-                } else {
-                    e.onError(new RuntimeException("Failed to download key id"));
+                try {
+                    byte[] keyId = loadLicenseSync();
+
+                    if (keyId != null) {
+                        e.onNext(keyId);
+                    } else {
+                        e.onError(new RuntimeException("Failed to download key id"));
+                    }
+                }catch (Throwable t) {
+                    if(e.isCancelled()) {
+                        return;
+                        // do nothing.
+                    }
+                    throw t;
                 }
+
             }
         }, BackpressureStrategy.BUFFER);
     }
