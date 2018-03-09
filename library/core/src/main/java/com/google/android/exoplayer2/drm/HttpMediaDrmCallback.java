@@ -17,8 +17,8 @@ package com.google.android.exoplayer2.drm;
 
 import android.annotation.TargetApi;
 import android.net.Uri;
-import android.os.Environment;
 import android.text.TextUtils;
+
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.drm.ExoMediaDrm.KeyRequest;
 import com.google.android.exoplayer2.drm.ExoMediaDrm.ProvisionRequest;
@@ -28,7 +28,6 @@ import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.Util;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -142,13 +141,6 @@ public final class HttpMediaDrmCallback implements MediaDrmCallback {
       }
     }
 
-    String filename = String.valueOf(System.currentTimeMillis()/ 1000);
-
-    File file = new File("/mnt/sdcard/Android/data/com.google.android.exoplayer2.demo/cache/offline_samples/test");
-    FileUtils.writeBytes(file, filename, data);
-
-
-    String dataStr = new String(data);
     DataSpec dataSpec = new DataSpec(Uri.parse(url), data, 0, 0, C.LENGTH_UNSET, null,
         DataSpec.FLAG_ALLOW_GZIP);
     DataSourceInputStream inputStream = new DataSourceInputStream(dataSource, dataSpec);
