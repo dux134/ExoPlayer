@@ -37,6 +37,8 @@ import android.widget.Toast;
 import com.google.android.exoplayer2.ParserException;
 import com.google.android.exoplayer2.offline.HlsOfflineUtil;
 import com.google.android.exoplayer2.offline.OfflineUtil;
+import com.google.android.exoplayer2.offline.dataprovider.cache.FileCacheInfoProvider;
+import com.google.android.exoplayer2.offline.dataprovider.cache.ICacheInfoProvider;
 import com.google.android.exoplayer2.offline.dataprovider.stream.HttpDataSourceFactoryBuilder;
 import com.google.android.exoplayer2.offline.models.CacheInfo;
 import com.google.android.exoplayer2.offline.models.DownloadInfo;
@@ -324,8 +326,10 @@ public class SampleChooserActivity3_Hls extends Activity {
                         HttpDataSourceFactoryBuilder builder = new HttpDataSourceFactoryBuilder("Exo");
                         builder.addRequestProperties("Authorization", "Bearer "+HHH_TOKEN);
 
+                        ICacheInfoProvider cacheInfoProvider = new FileCacheInfoProvider(baseFolder, key);
 
-                        final Flowable<DownloadInfo> contentFlowable = HlsOfflineUtil.downloadAsync(baseFolder, name, uriString, key, PIXEL_HEIGHT, builder)
+
+                        final Flowable<DownloadInfo> contentFlowable = HlsOfflineUtil.downloadAsync(baseFolder, name, uriString, key, PIXEL_HEIGHT, builder, cacheInfoProvider)
                                 .subscribeOn(Schedulers.computation())
                                 .observeOn(AndroidSchedulers.mainThread());
 
