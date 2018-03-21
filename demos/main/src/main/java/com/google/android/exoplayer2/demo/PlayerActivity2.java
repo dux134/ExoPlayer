@@ -45,6 +45,8 @@ import com.google.android.exoplayer2.drm.MediaDrmCallback;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer.DecoderInitializationException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil.DecoderQueryException;
+import com.google.android.exoplayer2.offline.dataprovider.cache.FileCacheInfoProvider;
+import com.google.android.exoplayer2.offline.dataprovider.cache.ICacheInfoProvider;
 import com.google.android.exoplayer2.offline.dataprovider.license.ILicenseProvider;
 import com.google.android.exoplayer2.offline.dataprovider.license.OfflineLicenseProvider;
 import com.google.android.exoplayer2.offline.dataprovider.license.OnlineLicenseProvider;
@@ -279,7 +281,10 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
 
         if (DemoUtil.isCacheNeeded(videoId)) {
             mLicenseProvider = new OfflineLicenseProvider(videoId, baseFolder, mLicenseProvider, key);
-            mVideoStreamProvider = new OfflineStreamProvider(videoId, uriString, baseFolder, key, 180, factoryBuilder, mVideoStreamProvider, new DashDataSourceProvider());
+
+            ICacheInfoProvider cacheInfoProvider = new FileCacheInfoProvider(baseFolder, key);
+
+            mVideoStreamProvider = new OfflineStreamProvider(videoId, uriString, baseFolder, key, 180, factoryBuilder, cacheInfoProvider, mVideoStreamProvider, new DashDataSourceProvider());
 
         }
 

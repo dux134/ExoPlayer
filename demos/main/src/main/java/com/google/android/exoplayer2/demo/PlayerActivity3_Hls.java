@@ -45,6 +45,8 @@ import com.google.android.exoplayer2.drm.FrameworkMediaCrypto;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer.DecoderInitializationException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil.DecoderQueryException;
+import com.google.android.exoplayer2.offline.dataprovider.cache.FileCacheInfoProvider;
+import com.google.android.exoplayer2.offline.dataprovider.cache.ICacheInfoProvider;
 import com.google.android.exoplayer2.offline.dataprovider.license.ILicenseProvider;
 import com.google.android.exoplayer2.offline.dataprovider.source.HlsDataSourceProvider;
 import com.google.android.exoplayer2.offline.dataprovider.stream.HlsOnlineStreamProvider;
@@ -287,7 +289,9 @@ public class PlayerActivity3_Hls extends Activity implements OnClickListener,
 
 
         if (DemoUtil.isCacheNeeded(videoId)) {
-            mVideoStreamProvider = new OfflineStreamProvider(videoId, uriString, baseFolder, key, PIXEL_HEIGHT, builder, mVideoStreamProvider, new HlsDataSourceProvider());
+
+            ICacheInfoProvider cacheInfoProvider = new FileCacheInfoProvider(baseFolder, key);
+            mVideoStreamProvider = new OfflineStreamProvider(videoId, uriString, baseFolder, key, PIXEL_HEIGHT, builder, cacheInfoProvider, mVideoStreamProvider, new HlsDataSourceProvider());
 
         }
 

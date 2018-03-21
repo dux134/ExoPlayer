@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+    >
+
+    <item
+        android:id="@+id/menu_item_3_dots"
+        android:icon="@drawable/ic_menu_more_vert"
+        android:orderInCategory="101"
+        android:title="MORE"
+        android:showAsAction="ifRoom">
+        <menu>
+            <item
+                android:title="1x"
+                android:showAsAction="always"
+                />
+            <item
+                android:title="1.5x"
+                android:showAsAction="always"
+                />
+
+            <item
+                android:title="1.8x"
+                android:showAsAction="always"
+                />
+
+            <item
+                android:title="2x"
+                android:showAsAction="always"
+                />
+
+        </menu>
+    </item>
+
+
+</menu>

@@ -38,6 +38,8 @@ import com.google.android.exoplayer2.ParserException;
 import com.google.android.exoplayer2.drm.MediaDrmCallback;
 import com.google.android.exoplayer2.offline.DashOfflineUtil;
 import com.google.android.exoplayer2.offline.OfflineUtil;
+import com.google.android.exoplayer2.offline.dataprovider.cache.FileCacheInfoProvider;
+import com.google.android.exoplayer2.offline.dataprovider.cache.ICacheInfoProvider;
 import com.google.android.exoplayer2.offline.dataprovider.license.OfflineLicenseProvider;
 import com.google.android.exoplayer2.offline.dataprovider.license.OnlineLicenseProvider;
 import com.google.android.exoplayer2.offline.dataprovider.stream.HttpDataSourceFactoryBuilder;
@@ -340,7 +342,9 @@ public class SampleChooserActivity2 extends Activity {
 
                         }
 
-                        final Flowable<DownloadInfo> contentFlowable = DashOfflineUtil.downloadAsync(baseFolder, name, uriString, key, 180, factoryBuilder);
+                        ICacheInfoProvider cacheInfoProvider = new FileCacheInfoProvider(baseFolder, key);
+
+                        final Flowable<DownloadInfo> contentFlowable = DashOfflineUtil.downloadAsync(baseFolder, name, uriString, key, 180, factoryBuilder, cacheInfoProvider);
 
                         Flowable<DownloadInfo> finalFlowable = licenseFlowable.flatMap(new Function<byte[], Flowable<DownloadInfo>>() {
                             @Override
