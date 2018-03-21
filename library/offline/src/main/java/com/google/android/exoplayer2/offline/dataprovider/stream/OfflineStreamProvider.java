@@ -4,6 +4,7 @@ import com.google.android.exoplayer2.drm.DefaultDrmSessionManager;
 import com.google.android.exoplayer2.drm.FrameworkMediaCrypto;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
 import com.google.android.exoplayer2.offline.OfflineUtil;
+import com.google.android.exoplayer2.offline.dataprovider.cache.ICacheInfoProvider;
 import com.google.android.exoplayer2.offline.dataprovider.source.IDataSourceProvider;
 import com.google.android.exoplayer2.upstream.DataSource;
 
@@ -23,13 +24,14 @@ public class OfflineStreamProvider implements IVideoStreamDataSourceProvider {
     private String mEncryptionKey;
     private int mVideoHeight = OfflineUtil.VIDEO_HEIGHT_WILDCARD;
     private IDataSourceProvider mDataSourceProvider;
+    private ICacheInfoProvider mCacheInfoProvider;
     private HttpDataSourceFactoryBuilder mFactoryBuilder;
 
 //    public OfflineStreamProvider(String mId, String mManifestUrl, File mBaseFolder, IVideoStreamDataSourceProvider streamProvider, IDataSourceProvider dataSourceProvider) {
 //        this(mId, mManifestUrl, mBaseFolder, null, OfflineUtil.VIDEO_HEIGHT_WILDCARD, null, streamProvider, dataSourceProvider);
 //    }
 
-    public OfflineStreamProvider(String mId, String mManifestUrl, File mBaseFolder, String encryptionKey, int videoHeight, HttpDataSourceFactoryBuilder factoryBuilder, IVideoStreamDataSourceProvider streamProvider, IDataSourceProvider dataSourceProvider) {
+    public OfflineStreamProvider(String mId, String mManifestUrl, File mBaseFolder, String encryptionKey, int videoHeight, HttpDataSourceFactoryBuilder factoryBuilder, ICacheInfoProvider cacheInfoProvider, IVideoStreamDataSourceProvider streamProvider, IDataSourceProvider dataSourceProvider) {
         this.mId = mId;
         this.mBaseFolder = mBaseFolder;
         this.mManifestUrl = mManifestUrl;
@@ -38,6 +40,7 @@ public class OfflineStreamProvider implements IVideoStreamDataSourceProvider {
         mVideoHeight = videoHeight;
         mDataSourceProvider = dataSourceProvider;
         mFactoryBuilder = factoryBuilder;
+        mCacheInfoProvider = cacheInfoProvider;
     }
 
     @Override
@@ -47,11 +50,13 @@ public class OfflineStreamProvider implements IVideoStreamDataSourceProvider {
             mBaseFolder.mkdir();
         }
 
-        if (OfflineUtil.isCacheAvailable(mBaseFolder, mId, mEncryptionKey)) {
+
+
+        if (mCacheInfoProvider.isCacheAvailable(mId)) {
             return OfflineUtil.loadCache(mBaseFolder, mId, mEncryptionKey, mFactoryBuilder);
         } else {
             try {
-                return mDataSourceProvider.downloadAndLoad(mBaseFolder, mId, mManifestUrl, mEncryptionKey, mFactoryBuilder, mVideoHeight);
+                return mDataSourceProvider.downloadAndLoad(mBaseFolder, mId, mManifestUrl, mEncryptionKey, mFactoryBuilder, mCacheInfoProvider, mVideoHeight);
             } catch (Exception e) {
                 e.printStackTrace();
                 return mBaseStreamProvider.createDataSource();

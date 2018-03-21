@@ -2,6 +2,9 @@ package com.google.android.exoplayer2.offline;
 
 import android.util.Log;
 
+import com.google.android.exoplayer2.offline.dataprovider.cache.FileCacheInfoProvider;
+import com.google.android.exoplayer2.offline.dataprovider.cache.ICacheInfoProvider;
+import com.google.android.exoplayer2.offline.dataprovider.stream.HttpDataSourceFactoryBuilder;
 import com.google.android.exoplayer2.offline.models.DownloadInfo;
 
 import java.io.File;
@@ -36,7 +39,11 @@ public class TestUtil {
 
     static DownloadInfo downloadSampleDashVideo(File baseCacheDir, String id, String encKey) {
 
-        Flowable<DownloadInfo> asyncDownloader = DashOfflineUtil.downloadAsync(baseCacheDir, id, SAMPLE_DASH_VIDEO_MANIFEST_URL, encKey, 180);
+        ICacheInfoProvider cacheInfoProvider = new FileCacheInfoProvider(baseCacheDir, encKey);
+        HttpDataSourceFactoryBuilder httpDataSourceFactoryBuilder = new HttpDataSourceFactoryBuilder("ExoPlayer");
+
+
+        Flowable<DownloadInfo> asyncDownloader = DashOfflineUtil.downloadAsync(baseCacheDir, id, SAMPLE_DASH_VIDEO_MANIFEST_URL, encKey, 180, httpDataSourceFactoryBuilder, cacheInfoProvider);
 
         final DownloadInfo[] result = {null};
         final Throwable[] err = {null};
@@ -99,7 +106,11 @@ public class TestUtil {
 
     static DownloadInfo downloadSampleHlsVideo(File baseCacheDir, String id, String encKey) {
 
-        Flowable<DownloadInfo> asyncDownloader = HlsOfflineUtil.downloadAsync(baseCacheDir, id, SAMPLE_HLS_VIDEO_MANIFEST_URL, encKey, 180);
+        ICacheInfoProvider cacheInfoProvider = new FileCacheInfoProvider(baseCacheDir, encKey);
+        HttpDataSourceFactoryBuilder httpDataSourceFactoryBuilder = new HttpDataSourceFactoryBuilder("ExoPlayer");
+
+
+        Flowable<DownloadInfo> asyncDownloader = HlsOfflineUtil.downloadAsync(baseCacheDir, id, SAMPLE_HLS_VIDEO_MANIFEST_URL, encKey, 180, httpDataSourceFactoryBuilder, cacheInfoProvider);
 
         final DownloadInfo[] result = {null};
         final Throwable[] err = {null};

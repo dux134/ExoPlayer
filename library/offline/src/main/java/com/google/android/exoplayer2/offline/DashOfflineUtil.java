@@ -3,6 +3,7 @@ package com.google.android.exoplayer2.offline;
 import android.net.Uri;
 import android.util.Log;
 
+import com.google.android.exoplayer2.offline.dataprovider.cache.ICacheInfoProvider;
 import com.google.android.exoplayer2.offline.dataprovider.stream.HttpDataSourceFactoryBuilder;
 import com.google.android.exoplayer2.offline.models.CacheInfo;
 import com.google.android.exoplayer2.offline.models.DownloadInfo;
@@ -13,7 +14,6 @@ import com.google.android.exoplayer2.source.dash.manifest.Period;
 import com.google.android.exoplayer2.source.dash.manifest.Representation;
 import com.google.android.exoplayer2.source.dash.manifest.RepresentationKey;
 import com.google.android.exoplayer2.source.dash.offline.DashDownloader;
-import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.cache.NoOpCacheEvictor;
 import com.google.android.exoplayer2.upstream.cache.SimpleCache;
@@ -28,7 +28,6 @@ import io.reactivex.FlowableEmitter;
 import io.reactivex.FlowableOnSubscribe;
 
 import static com.google.android.exoplayer2.offline.OfflineUtil.get16ByteSecretKey;
-import static com.google.android.exoplayer2.offline.OfflineUtil.storeCacheInfo;
 
 /**
  * Created by sharish on 22/01/18.
@@ -47,14 +46,14 @@ public class DashOfflineUtil {
      * @param targetVideoPixelHeight - Target video height.
      * @return - Rx Flowable reference for async downloading.
      */
-    public static Flowable<DownloadInfo> downloadAsync(final File downloadFolder, final String id, final String manifestUrl, final String key, final int targetVideoPixelHeight, final HttpDataSourceFactoryBuilder factoryBuilder) {
+    public static Flowable<DownloadInfo> downloadAsync(final File downloadFolder, final String id, final String manifestUrl, final String key, final int targetVideoPixelHeight, final HttpDataSourceFactoryBuilder factoryBuilder, final  ICacheInfoProvider cacheInfoProvider) {
 
         return Flowable.create(new FlowableOnSubscribe<DownloadInfo>() {
             @Override
             public void subscribe(final FlowableEmitter<DownloadInfo> e) throws Exception {
 
                 try {
-                    downloadSync(downloadFolder, id, manifestUrl, key, targetVideoPixelHeight, factoryBuilder, new Downloader.ProgressListener() {
+                    downloadSync(downloadFolder, id, manifestUrl, key, targetVideoPixelHeight, factoryBuilder, cacheInfoProvider, new Downloader.ProgressListener() {
                         @Override
                         public void onDownloadProgress(Downloader downloader, float downloadPercentage, long downloadedBytes) {
 
@@ -111,7 +110,7 @@ public class DashOfflineUtil {
 
     }
 
-    public static void downloadSync(final File baseFolder, final String id, final String manifestUrl, final String key, int targetVideoPixelHeight, HttpDataSourceFactoryBuilder factoryBuilder, final Downloader.ProgressListener listener) throws Exception {
+    public static void downloadSync(final File baseFolder, final String id, final String manifestUrl, final String key, int targetVideoPixelHeight, HttpDataSourceFactoryBuilder factoryBuilder, final ICacheInfoProvider cacheInfoProvider, final Downloader.ProgressListener listener) throws Exception {
 
         if (!baseFolder.exists()) {
             baseFolder.mkdir();
@@ -140,7 +139,7 @@ public class DashOfflineUtil {
         // Select the first representation of the first adaptation set of the first period
         dashDownloader.selectRepresentations(DashOfflineUtil.getRepresentationKeys(dashManifest, targetVideoPixelHeight));
 
-        CacheInfo cacheInfoNonfinal = OfflineUtil.getCacheInfo(baseFolder, id, key);
+        CacheInfo cacheInfoNonfinal = cacheInfoProvider.getCacheInfo(id);
 
         if (cacheInfoNonfinal == null) {
             cacheInfoNonfinal = new CacheInfo(id);
@@ -155,7 +154,7 @@ public class DashOfflineUtil {
                 cacheInfo.setDownloadBytes(downloadedBytes);
                 cacheInfo.setDownloadPercent(downloadPercentage);
 
-                storeCacheInfo(baseFolder, id, cacheInfo, key);
+                cacheInfoProvider.storeCacheInfo(id, cacheInfo);
 
                 if (listener != null) {
                     listener.onDownloadProgress(downloader, downloadPercentage, downloadedBytes);
