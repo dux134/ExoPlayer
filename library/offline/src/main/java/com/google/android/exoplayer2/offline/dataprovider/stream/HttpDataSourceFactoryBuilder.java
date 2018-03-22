@@ -1,8 +1,8 @@
 package com.google.android.exoplayer2.offline.dataprovider.stream;
 
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
+import com.google.android.exoplayer2.upstream.TransferListener;
 
 import java.util.ArrayList;
 
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class HttpDataSourceFactoryBuilder {
 
     private String mUserAgent;
-    private DefaultBandwidthMeter mBandwidthMeter;
+    private TransferListener mTransferListener;
     private ArrayList<String[]> mRequestProperties = new ArrayList<>();
 
 
@@ -26,8 +26,8 @@ public class HttpDataSourceFactoryBuilder {
         return this;
     }
 
-    public HttpDataSourceFactoryBuilder bandwidthMeter(DefaultBandwidthMeter defaultBandwidthMeter) {
-        mBandwidthMeter = defaultBandwidthMeter;
+    public HttpDataSourceFactoryBuilder transferListener(TransferListener transferListener) {
+        mTransferListener = transferListener;
         return this;
     }
 
@@ -35,7 +35,7 @@ public class HttpDataSourceFactoryBuilder {
     public DefaultHttpDataSourceFactory build() {
 
 
-        DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory(mUserAgent, mBandwidthMeter);
+        DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory(mUserAgent, mTransferListener);
 
         if (mRequestProperties.size() > 0) {
             HttpDataSource.RequestProperties defaultRequestProperties = factory.getDefaultRequestProperties();
