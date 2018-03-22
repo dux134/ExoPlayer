@@ -31,9 +31,9 @@ public class OnlineLicenseProvider implements ILicenseProvider {
 
     private HttpDataSource.Factory httpDataSourceFactory;
     private MediaDrmCallback mMediaDrmCallback;
-    private Uri mPlayingUri;
+    private String mPlayingUri;
 
-    public OnlineLicenseProvider(HttpDataSource.Factory httpDataSourceFactory, MediaDrmCallback mMediaDrmCallback, Uri mPlayingUri) {
+    public OnlineLicenseProvider(HttpDataSource.Factory httpDataSourceFactory, MediaDrmCallback mMediaDrmCallback, String mPlayingUri) {
         this.httpDataSourceFactory = httpDataSourceFactory;
         this.mMediaDrmCallback = mMediaDrmCallback;
         this.mPlayingUri = mPlayingUri;
@@ -97,7 +97,7 @@ public class OnlineLicenseProvider implements ILicenseProvider {
 
 
         DataSource dataSource = httpDataSourceFactory.createDataSource();
-        DashManifest dashManifest = DashUtil.loadManifest(dataSource, mPlayingUri);
+        DashManifest dashManifest = DashUtil.loadManifest(dataSource, Uri.parse(mPlayingUri));
         DrmInitData drmInitData = DashUtil.loadDrmInitData(dataSource, dashManifest.getPeriod(0));
 
         return offlineLicenseHelper.downloadLicense(drmInitData);

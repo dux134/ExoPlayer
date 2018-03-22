@@ -298,7 +298,6 @@ public class SampleChooserActivity2 extends Activity {
             String lice = child.drmInfo.drmLicenseUrl;
             final String[] req = child.drmInfo.drmKeyRequestProperties;
             final String uriString = child.uri;
-            final Uri playUri = Uri.parse(uriString);
 
             File externalCacheDir = view.getContext().getExternalCacheDir();
             final File baseFolder = new File(externalCacheDir, "offline_samples");
@@ -311,7 +310,7 @@ public class SampleChooserActivity2 extends Activity {
             MediaDrmCallback drmCallback = DemoUtil.getMediaDrmCallback(lice, factory, req);
 
 
-            OnlineLicenseProvider onlineLicenseProvider = new OnlineLicenseProvider(factory, drmCallback, playUri);
+            OnlineLicenseProvider onlineLicenseProvider = new OnlineLicenseProvider(factory, drmCallback, uriString);
             final OfflineLicenseProvider offlineLicenseProvider = new OfflineLicenseProvider(name, baseFolder, onlineLicenseProvider, key);
 
             textView.setText(child.name);

@@ -275,7 +275,7 @@ public class PlayerActivity2 extends Activity implements OnClickListener,
 
         }
 
-        mLicenseProvider = new OnlineLicenseProvider(getHttpFactory(), mediaDrmCallback, playingUri);
+        mLicenseProvider = new OnlineLicenseProvider(getHttpFactory(), mediaDrmCallback, uriString);
         mVideoStreamProvider = new DrmOnlineStreamProvider(mediaDrmCallback, null);
 
 

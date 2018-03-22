@@ -34,7 +34,7 @@ public class OnlineLicenseProviderTest extends InstrumentationTestCase {
         DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("Exo", null);
         HttpMediaDrmCallback drmCallback = new HttpMediaDrmCallback(SAMPLE_VIDEO_LICENSE_URL, factory);
 
-        mLicenseProvider = new OnlineLicenseProvider(factory, drmCallback, Uri.parse(SAMPLE_VIDEO_MANIFEST_URL));
+        mLicenseProvider = new OnlineLicenseProvider(factory, drmCallback, SAMPLE_VIDEO_MANIFEST_URL);
     }
 
 
