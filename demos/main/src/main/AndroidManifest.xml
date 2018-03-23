@@ -46,13 +46,7 @@
             android:name="com.google.android.exoplayer2.demo.SampleChooserActivity"
             android:configChanges="keyboardHidden"
             android:label="@string/application_name">
-        </activity>
 
-
-        <activity
-            android:name="com.google.android.exoplayer2.demo.SampleChooserActivity3_Hls"
-            android:configChanges="keyboardHidden"
-            android:label="@string/application_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -73,6 +67,14 @@
                 <data android:host="*"/>
                 <data android:pathPattern=".*\\.exolist\\.json"/>
             </intent-filter>
+        </activity>
+
+
+        <activity
+            android:name="com.google.android.exoplayer2.demo.SampleChooserActivity3_Hls"
+            android:configChanges="keyboardHidden"
+            android:label="@string/application_name">
+
         </activity>
 
         <activity

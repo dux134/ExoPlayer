@@ -26,6 +26,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -39,6 +41,7 @@ import com.google.android.exoplayer2.C.ContentType;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.drm.DefaultDrmSessionManager;
@@ -648,5 +651,33 @@ public class PlayerActivity extends Activity implements OnClickListener,
     }
 
   }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_video_detail, menu);
+
+        MenuItem _3DotMenuItem = menu.findItem(R.id.menu_item_3_dots);
+        _3DotMenuItem.setVisible(true);
+
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        String text = item.getTitle().toString();
+
+        if (text.endsWith("x")) {
+            float _speed = Float.parseFloat(text.replaceAll("x", ""));
+
+            if (player != null && player.getPlaybackState() != Player.STATE_IDLE) {
+                player.setPlaybackParameters(new PlaybackParameters(_speed, 1f));
+            }
+        }
+
+        return super.onOptionsItemSelected(item);
+
+    }
 
 }
