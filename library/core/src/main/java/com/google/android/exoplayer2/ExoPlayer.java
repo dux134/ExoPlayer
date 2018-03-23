@@ -21,7 +21,6 @@ import com.google.android.exoplayer2.audio.MediaCodecAudioRenderer;
 import com.google.android.exoplayer2.metadata.MetadataRenderer;
 import com.google.android.exoplayer2.source.ClippingMediaSource;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
-import com.google.android.exoplayer2.source.DynamicConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.LoopingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -54,8 +53,7 @@ import com.google.android.exoplayer2.video.MediaCodecVideoRenderer;
  *       implementation for loading single media samples ({@link SingleSampleMediaSource}) that's
  *       most often used for side-loaded subtitle files, and implementations for building more
  *       complex MediaSources from simpler ones ({@link MergingMediaSource}, {@link
- *       ConcatenatingMediaSource}, {@link DynamicConcatenatingMediaSource}, {@link
- *       LoopingMediaSource} and {@link ClippingMediaSource}).
+ *       ConcatenatingMediaSource}, {@link LoopingMediaSource} and {@link ClippingMediaSource}).
  *   <li><b>{@link Renderer}</b>s that render individual components of the media. The library
  *       provides default implementations for common media types ({@link MediaCodecVideoRenderer},
  *       {@link MediaCodecAudioRenderer}, {@link TextRenderer} and {@link MetadataRenderer}). A
@@ -91,10 +89,9 @@ import com.google.android.exoplayer2.video.MediaCodecVideoRenderer;
  * model">
  *
  * <ul>
- *   <li>It is recommended that ExoPlayer instances are created and accessed from a single
+ *   <li>It is strongly recommended that ExoPlayer instances are created and accessed from a single
  *       application thread. The application's main thread is ideal. Accessing an instance from
- *       multiple threads is discouraged, however if an application does wish to do this then it may
- *       do so provided that it ensures accesses are synchronized.
+ *       multiple threads is discouraged as it may cause synchronization problems.
  *   <li>Registered listeners are called on the thread that created the ExoPlayer instance, unless
  *       the thread that created the ExoPlayer instance does not have a {@link Looper}. In that
  *       case, registered listeners will be called on the application's main thread.

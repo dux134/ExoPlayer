@@ -17,8 +17,6 @@ package com.google.android.exoplayer2.imademo;
 
 import android.content.Context;
 import android.net.Uri;
-import android.os.Handler;
-import android.support.annotation.Nullable;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.C.ContentType;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -27,7 +25,6 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.ext.ima.ImaAdsLoader;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.MediaSourceEventListener;
 import com.google.android.exoplayer2.source.ads.AdsMediaSource;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
@@ -38,7 +35,7 @@ import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
+import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
@@ -68,7 +65,7 @@ import com.google.android.exoplayer2.util.Util;
             new DefaultBandwidthMeter());
   }
 
-  public void init(Context context, SimpleExoPlayerView simpleExoPlayerView) {
+  public void init(Context context, PlayerView playerView) {
     // Create a default track selector.
     BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
     TrackSelection.Factory videoTrackSelectionFactory =
@@ -79,12 +76,11 @@ import com.google.android.exoplayer2.util.Util;
     player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
 
     // Bind the player to the view.
-    simpleExoPlayerView.setPlayer(player);
+    playerView.setPlayer(player);
 
     // This is the MediaSource representing the content media (i.e. not the ad).
     String contentUrl = context.getString(R.string.content_url);
-    MediaSource contentMediaSource =
-        buildMediaSource(Uri.parse(contentUrl), /* handler= */ null, /* listener= */ null);
+    MediaSource contentMediaSource = buildMediaSource(Uri.parse(contentUrl));
 
     // Compose the content media source into a new AdsMediaSource with both ads and content.
     MediaSource mediaSourceWithAds =
@@ -92,7 +88,7 @@ import com.google.android.exoplayer2.util.Util;
             contentMediaSource,
             /* adMediaSourceFactory= */ this,
             adsLoader,
-            simpleExoPlayerView.getOverlayFrameLayout(),
+            playerView.getOverlayFrameLayout(),
             /* eventHandler= */ null,
             /* eventListener= */ null);
 
@@ -121,9 +117,8 @@ import com.google.android.exoplayer2.util.Util;
   // AdsMediaSource.MediaSourceFactory implementation.
 
   @Override
-  public MediaSource createMediaSource(
-      Uri uri, @Nullable Handler handler, @Nullable MediaSourceEventListener listener) {
-    return buildMediaSource(uri, handler, listener);
+  public MediaSource createMediaSource(Uri uri) {
+    return buildMediaSource(uri);
   }
 
   @Override
@@ -134,25 +129,22 @@ import com.google.android.exoplayer2.util.Util;
 
   // Internal methods.
 
-  private MediaSource buildMediaSource(
-      Uri uri, @Nullable Handler handler, @Nullable MediaSourceEventListener listener) {
+  private MediaSource buildMediaSource(Uri uri) {
     @ContentType int type = Util.inferContentType(uri);
     switch (type) {
       case C.TYPE_DASH:
         return new DashMediaSource.Factory(
                 new DefaultDashChunkSource.Factory(mediaDataSourceFactory),
                 manifestDataSourceFactory)
-            .createMediaSource(uri, handler, listener);
+            .createMediaSource(uri);
       case C.TYPE_SS:
         return new SsMediaSource.Factory(
                 new DefaultSsChunkSource.Factory(mediaDataSourceFactory), manifestDataSourceFactory)
-            .createMediaSource(uri, handler, listener);
+            .createMediaSource(uri);
       case C.TYPE_HLS:
-        return new HlsMediaSource.Factory(mediaDataSourceFactory)
-            .createMediaSource(uri, handler, listener);
+        return new HlsMediaSource.Factory(mediaDataSourceFactory).createMediaSource(uri);
       case C.TYPE_OTHER:
-        return new ExtractorMediaSource.Factory(mediaDataSourceFactory)
-            .createMediaSource(uri, handler, listener);
+        return new ExtractorMediaSource.Factory(mediaDataSourceFactory).createMediaSource(uri);
       default:
         throw new IllegalStateException("Unsupported type: " + type);
     }

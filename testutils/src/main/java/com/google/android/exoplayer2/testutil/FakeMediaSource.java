@@ -15,10 +15,14 @@
  */
 package com.google.android.exoplayer2.testutil;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.source.BaseMediaSource;
 import com.google.android.exoplayer2.source.MediaPeriod;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroup;
@@ -27,23 +31,23 @@ import com.google.android.exoplayer2.upstream.Allocator;
 import com.google.android.exoplayer2.util.Assertions;
 import java.io.IOException;
 import java.util.ArrayList;
-import junit.framework.Assert;
+import java.util.List;
 
 /**
- * Fake {@link MediaSource} that provides a given timeline. Creating the period will return a
- * {@link FakeMediaPeriod} with a {@link TrackGroupArray} using the given {@link Format}s.
+ * Fake {@link MediaSource} that provides a given timeline. Creating the period will return a {@link
+ * FakeMediaPeriod} with a {@link TrackGroupArray} using the given {@link Format}s.
  */
-public class FakeMediaSource implements MediaSource {
+public class FakeMediaSource extends BaseMediaSource {
 
-  private final Object manifest;
   private final TrackGroupArray trackGroupArray;
   private final ArrayList<FakeMediaPeriod> activeMediaPeriods;
   private final ArrayList<MediaPeriodId> createdMediaPeriods;
 
   protected Timeline timeline;
+  private Object manifest;
   private boolean preparedSource;
   private boolean releasedSource;
-  private Listener listener;
+  private Handler sourceInfoRefreshHandler;
 
   /**
    * Creates a {@link FakeMediaSource}. This media source creates {@link FakeMediaPeriod}s with a
@@ -71,24 +75,25 @@ public class FakeMediaSource implements MediaSource {
   }
 
   @Override
-  public void prepareSource(ExoPlayer player, boolean isTopLevelSource, Listener listener) {
-    Assert.assertFalse(preparedSource);
+  public synchronized void prepareSourceInternal(ExoPlayer player, boolean isTopLevelSource) {
+    assertThat(preparedSource).isFalse();
     preparedSource = true;
-    this.listener = listener;
+    releasedSource = false;
+    sourceInfoRefreshHandler = new Handler();
     if (timeline != null) {
-      listener.onSourceInfoRefreshed(this, timeline, manifest);
+      refreshSourceInfo(timeline, manifest);
     }
   }
 
   @Override
   public void maybeThrowSourceInfoRefreshError() throws IOException {
-    Assert.assertTrue(preparedSource);
+    assertThat(preparedSource).isTrue();
   }
 
   @Override
   public MediaPeriod createPeriod(MediaPeriodId id, Allocator allocator) {
-    Assert.assertTrue(preparedSource);
-    Assert.assertFalse(releasedSource);
+    assertThat(preparedSource).isTrue();
+    assertThat(releasedSource).isFalse();
     Assertions.checkIndex(id.periodIndex, 0, timeline.getPeriodCount());
     FakeMediaPeriod mediaPeriod = createFakeMediaPeriod(id, trackGroupArray, allocator);
     activeMediaPeriods.add(mediaPeriod);
@@ -98,30 +103,44 @@ public class FakeMediaSource implements MediaSource {
 
   @Override
   public void releasePeriod(MediaPeriod mediaPeriod) {
-    Assert.assertTrue(preparedSource);
-    Assert.assertFalse(releasedSource);
+    assertThat(preparedSource).isTrue();
+    assertThat(releasedSource).isFalse();
     FakeMediaPeriod fakeMediaPeriod = (FakeMediaPeriod) mediaPeriod;
-    Assert.assertTrue(activeMediaPeriods.remove(fakeMediaPeriod));
+    assertThat(activeMediaPeriods.remove(fakeMediaPeriod)).isTrue();
     fakeMediaPeriod.release();
   }
 
   @Override
-  public void releaseSource() {
-    Assert.assertTrue(preparedSource);
-    Assert.assertFalse(releasedSource);
-    Assert.assertTrue(activeMediaPeriods.isEmpty());
+  public void releaseSourceInternal() {
+    assertThat(preparedSource).isTrue();
+    assertThat(releasedSource).isFalse();
+    assertThat(activeMediaPeriods.isEmpty()).isTrue();
     releasedSource = true;
+    preparedSource = false;
+    sourceInfoRefreshHandler.removeCallbacksAndMessages(null);
+    sourceInfoRefreshHandler = null;
   }
 
   /**
    * Sets a new timeline and manifest. If the source is already prepared, this triggers a source
    * info refresh message being sent to the listener.
    */
-  public void setNewSourceInfo(Timeline newTimeline, Object manifest) {
-    Assert.assertFalse(releasedSource);
-    this.timeline = newTimeline;
-    if (preparedSource) {
-      listener.onSourceInfoRefreshed(this, timeline, manifest);
+  public synchronized void setNewSourceInfo(final Timeline newTimeline, final Object newManifest) {
+    if (sourceInfoRefreshHandler != null) {
+      sourceInfoRefreshHandler.post(
+          new Runnable() {
+            @Override
+            public void run() {
+              assertThat(releasedSource).isFalse();
+              assertThat(preparedSource).isTrue();
+              timeline = newTimeline;
+              manifest = newManifest;
+              refreshSourceInfo(timeline, manifest);
+            }
+          });
+    } else {
+      timeline = newTimeline;
+      manifest = newManifest;
     }
   }
 
@@ -129,14 +148,19 @@ public class FakeMediaSource implements MediaSource {
    * Assert that the source and all periods have been released.
    */
   public void assertReleased() {
-    Assert.assertTrue(releasedSource || !preparedSource);
+    assertThat(releasedSource || !preparedSource).isTrue();
   }
 
   /**
    * Assert that a media period for the given id has been created.
    */
   public void assertMediaPeriodCreated(MediaPeriodId mediaPeriodId) {
-    Assert.assertTrue(createdMediaPeriods.contains(mediaPeriodId));
+    assertThat(createdMediaPeriods).contains(mediaPeriodId);
+  }
+
+  /** Returns a list of {@link MediaPeriodId}s, with one element for each created media period. */
+  public List<MediaPeriodId> getCreatedMediaPeriods() {
+    return createdMediaPeriods;
   }
 
   protected FakeMediaPeriod createFakeMediaPeriod(MediaPeriodId id, TrackGroupArray trackGroupArray,

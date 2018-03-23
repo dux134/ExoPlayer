@@ -26,6 +26,7 @@ import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.FileDataSource;
 import com.google.android.exoplayer2.upstream.TeeDataSource;
 import com.google.android.exoplayer2.upstream.cache.Cache.CacheException;
+import com.google.android.exoplayer2.util.Assertions;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.lang.annotation.Retention;
@@ -211,7 +212,7 @@ public final class CacheDataSource implements DataSource {
           }
         }
       }
-      openNextSource();
+      openNextSource(false);
       return bytesRemaining;
     } catch (IOException e) {
       handleBeforeThrow(e);
@@ -229,7 +230,7 @@ public final class CacheDataSource implements DataSource {
     }
     try {
       if (readPosition >= checkCachePosition) {
-        openNextSource();
+        openNextSource(true);
       }
       int bytesRead = currentDataSource.read(buffer, offset, readLength);
       if (bytesRead != C.RESULT_END_OF_INPUT) {
@@ -243,7 +244,8 @@ public final class CacheDataSource implements DataSource {
       } else if (currentDataSpecLengthUnset) {
         setBytesRemaining(0);
       } else if (bytesRemaining > 0 || bytesRemaining == C.LENGTH_UNSET) {
-        openNextSource();
+        closeCurrentSource();
+        openNextSource(false);
         return read(buffer, offset, readLength);
       }
       return bytesRead;
@@ -278,8 +280,17 @@ public final class CacheDataSource implements DataSource {
    * Opens the next source. If the cache contains data spanning the current read position then
    * {@link #cacheReadDataSource} is opened to read from it. Else {@link #upstreamDataSource} is
    * opened to read from the upstream source and write into the cache.
+   *
+   * <p>There must not be a currently open source when this method is called, except in the case
+   * that {@code checkCache} is true. If {@code checkCache} is true then there must be a currently
+   * open source, and it must be {@link #upstreamDataSource}. It will be closed and a new source
+   * opened if it's possible to switch to reading from or writing to the cache. If a switch isn't
+   * possible then the current source is left unchanged.
+   *
+   * @param checkCache If true tries to switch to reading from or writing to cache instead of
+   *     reading from {@link #upstreamDataSource}, which is the currently open source.
    */
-  private void openNextSource() throws IOException {
+  private void openNextSource(boolean checkCache) throws IOException {
     CacheSpan nextSpan;
     if (currentRequestIgnoresCache) {
       nextSpan = null;
@@ -331,22 +342,33 @@ public final class CacheDataSource implements DataSource {
       }
     }
 
-    if (nextDataSource == upstreamDataSource) {
-      checkCachePosition = readPosition + MIN_READ_BEFORE_CHECKING_CACHE;
-      if (currentDataSource == upstreamDataSource) {
+    checkCachePosition =
+        !currentRequestIgnoresCache && nextDataSource == upstreamDataSource
+            ? readPosition + MIN_READ_BEFORE_CHECKING_CACHE
+            : Long.MAX_VALUE;
+    if (checkCache) {
+      Assertions.checkState(currentDataSource == upstreamDataSource);
+      if (nextDataSource == upstreamDataSource) {
+        // Continue reading from upstream.
         return;
       }
-    } else {
-      checkCachePosition = Long.MAX_VALUE;
+      // We're switching to reading from or writing to the cache.
+      try {
+        closeCurrentSource();
+      } catch (Throwable e) {
+        if (nextSpan.isHoleSpan()) {
+          // Release the hole span before throwing, else we'll hold it forever.
+          cache.releaseHoleSpan(nextSpan);
+        }
+        throw e;
+      }
     }
-    closeCurrentSource();
 
     if (nextSpan != null && nextSpan.isHoleSpan()) {
       currentHoleSpan = nextSpan;
     }
     currentDataSource = nextDataSource;
     currentDataSpecLengthUnset = nextDataSpec.length == C.LENGTH_UNSET;
-
     long resolvedLength = nextDataSource.open(nextDataSpec);
     if (currentDataSpecLengthUnset && resolvedLength != C.LENGTH_UNSET) {
       setBytesRemaining(resolvedLength);
@@ -384,9 +406,9 @@ public final class CacheDataSource implements DataSource {
     }
     try {
       currentDataSource.close();
+    } finally {
       currentDataSource = null;
       currentDataSpecLengthUnset = false;
-    } finally {
       if (currentHoleSpan != null) {
         cache.releaseHoleSpan(currentHoleSpan);
         currentHoleSpan = null;

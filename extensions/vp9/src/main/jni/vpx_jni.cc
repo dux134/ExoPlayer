@@ -218,7 +218,6 @@ static int convert_16_to_8_neon(const vpx_image_t* const img, jbyte* const data,
       dstV += 8;
     }
 
-    i *= 4;
     uint32_t randval = 0;
     while (i < uvWidth) {
       if (!randval) randval = random();
@@ -296,7 +295,11 @@ DECODER_FUNC(jlong, vpxInit, jboolean disableLoopFilter) {
     return 0;
   }
   if (disableLoopFilter) {
-    vpx_codec_control_(context, VP9_SET_SKIP_LOOP_FILTER, true);
+    // TODO(b/71930387): Use vpx_codec_control(), not vpx_codec_control_().
+    err = vpx_codec_control_(context, VP9_SET_SKIP_LOOP_FILTER, true);
+    if (err) {
+      LOGE("ERROR: Failed to shut off libvpx loop filter, error = %d.", err);
+    }
   }
 
   // Populate JNI References.
@@ -363,7 +366,7 @@ DECODER_FUNC(jint, vpxGetFrame, jlong jContext, jobject jOutputBuffer) {
     // resize buffer if required.
     jboolean initResult = env->CallBooleanMethod(jOutputBuffer, initForRgbFrame,
                                                  img->d_w, img->d_h);
-    if (initResult == JNI_FALSE) {
+    if (env->ExceptionCheck() || !initResult) {
       return -1;
     }
 
@@ -401,7 +404,7 @@ DECODER_FUNC(jint, vpxGetFrame, jlong jContext, jobject jOutputBuffer) {
     jboolean initResult = env->CallBooleanMethod(
         jOutputBuffer, initForYuvFrame, img->d_w, img->d_h,
         img->stride[VPX_PLANE_Y], img->stride[VPX_PLANE_U], colorspace);
-    if (initResult == JNI_FALSE) {
+    if (env->ExceptionCheck() || !initResult) {
       return -1;
     }
 

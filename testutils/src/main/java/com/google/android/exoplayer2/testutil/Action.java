@@ -15,9 +15,12 @@
  */
 package com.google.android.exoplayer2.testutil;
 
+import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.Surface;
 import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
@@ -38,13 +41,14 @@ import com.google.android.exoplayer2.util.HandlerWrapper;
 public abstract class Action {
 
   private final String tag;
-  private final String description;
+  private final @Nullable String description;
 
   /**
    * @param tag A tag to use for logging.
-   * @param description A description to be logged when the action is executed.
+   * @param description A description to be logged when the action is executed, or null if no
+   *     logging is required.
    */
-  public Action(String tag, String description) {
+  public Action(String tag, @Nullable String description) {
     this.tag = tag;
     this.description = description;
   }
@@ -64,7 +68,9 @@ public abstract class Action {
       Surface surface,
       HandlerWrapper handler,
       ActionNode nextAction) {
-    Log.i(tag, description);
+    if (description != null) {
+      Log.i(tag, description);
+    }
     doActionAndScheduleNextImpl(player, trackSelector, surface, handler, nextAction);
   }
 
@@ -411,7 +417,7 @@ public abstract class Action {
       } else {
         message.setPosition(positionMs);
       }
-      message.setHandler(new android.os.Handler());
+      message.setHandler(new Handler());
       message.setDeleteAfterDelivery(deleteAfterDelivery);
       message.send();
     }
@@ -439,6 +445,98 @@ public abstract class Action {
       player.setPlaybackParameters(playbackParameters);
     }
 
+  }
+
+  /** Throws a playback exception on the playback thread. */
+  public static final class ThrowPlaybackException extends Action {
+
+    private final ExoPlaybackException exception;
+
+    /**
+     * @param tag A tag to use for logging.
+     * @param exception The exception to throw.
+     */
+    public ThrowPlaybackException(String tag, ExoPlaybackException exception) {
+      super(tag, "ThrowPlaybackException:" + exception);
+      this.exception = exception;
+    }
+
+    @Override
+    protected void doActionImpl(
+        SimpleExoPlayer player, MappingTrackSelector trackSelector, Surface surface) {
+      player
+          .createMessage(
+              new Target() {
+                @Override
+                public void handleMessage(int messageType, Object payload)
+                    throws ExoPlaybackException {
+                  throw exception;
+                }
+              })
+          .send();
+    }
+  }
+
+  /**
+   * Schedules a play action to be executed, waits until the player reaches the specified position,
+   * and pauses the player again.
+   */
+  public static final class PlayUntilPosition extends Action {
+
+    private final int windowIndex;
+    private final long positionMs;
+
+    /**
+     * @param tag A tag to use for logging.
+     * @param windowIndex The window index at which the player should be paused again.
+     * @param positionMs The position in that window at which the player should be paused again.
+     */
+    public PlayUntilPosition(String tag, int windowIndex, long positionMs) {
+      super(tag, "PlayUntilPosition:" + windowIndex + "," + positionMs);
+      this.windowIndex = windowIndex;
+      this.positionMs = positionMs;
+    }
+
+    @Override
+    protected void doActionAndScheduleNextImpl(
+        final SimpleExoPlayer player,
+        final MappingTrackSelector trackSelector,
+        final Surface surface,
+        final HandlerWrapper handler,
+        final ActionNode nextAction) {
+      // Schedule one message on the playback thread to pause the player immediately.
+      player
+          .createMessage(
+              new Target() {
+                @Override
+                public void handleMessage(int messageType, Object payload)
+                    throws ExoPlaybackException {
+                  player.setPlayWhenReady(/* playWhenReady= */ false);
+                }
+              })
+          .setPosition(windowIndex, positionMs)
+          .send();
+      // Schedule another message on this test thread to continue action schedule.
+      player
+          .createMessage(
+              new Target() {
+                @Override
+                public void handleMessage(int messageType, Object payload)
+                    throws ExoPlaybackException {
+                  nextAction.schedule(player, trackSelector, surface, handler);
+                }
+              })
+          .setPosition(windowIndex, positionMs)
+          .setHandler(new Handler())
+          .send();
+      player.setPlayWhenReady(true);
+    }
+
+    @Override
+    protected void doActionImpl(
+        SimpleExoPlayer player, MappingTrackSelector trackSelector, Surface surface) {
+      // Not triggered.
+    }
   }
 
   /**

@@ -34,7 +34,6 @@ import java.io.OutputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Random;
@@ -46,9 +45,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-/**
- * This class maintains the index of cached content.
- */
+/** Maintains the index of cached content. */
 /*package*/ class CachedContentIndex {
 
   public static final String FILE_NAME = "cached_content_index.exi";
@@ -140,7 +137,7 @@ import javax.crypto.spec.SecretKeySpec;
    * @param key The cache key that uniquely identifies the original stream.
    * @return A new or existing CachedContent instance with the given key.
    */
-  public CachedContent add(String key) {
+  public CachedContent getOrAdd(String key) {
     CachedContent cachedContent = keyToContent.get(key);
     if (cachedContent == null) {
       cachedContent = addNew(key, C.LENGTH_UNSET);
@@ -166,7 +163,7 @@ import javax.crypto.spec.SecretKeySpec;
 
   /** Returns an existing or new id assigned to the given key. */
   public int assignIdForKey(String key) {
-    return add(key).id;
+    return getOrAdd(key).id;
   }
 
   /** Returns the key which has the given id assigned. */
@@ -174,30 +171,22 @@ import javax.crypto.spec.SecretKeySpec;
     return idToKey.get(id);
   }
 
-  /**
-   * Removes {@link CachedContent} with the given key from index. It shouldn't contain any spans.
-   *
-   * @throws IllegalStateException If {@link CachedContent} isn't empty.
-   */
-  public void removeEmpty(String key) {
-    CachedContent cachedContent = keyToContent.remove(key);
-    if (cachedContent != null) {
-      Assertions.checkState(cachedContent.isEmpty());
+  /** Removes {@link CachedContent} with the given key from index if it's empty and not locked. */
+  public void maybeRemove(String key) {
+    CachedContent cachedContent = keyToContent.get(key);
+    if (cachedContent != null && cachedContent.isEmpty() && !cachedContent.isLocked()) {
+      keyToContent.remove(key);
       idToKey.remove(cachedContent.id);
       changed = true;
     }
   }
 
-  /** Removes empty {@link CachedContent} instances from index. */
+  /** Removes empty and not locked {@link CachedContent} instances from index. */
   public void removeEmpty() {
-    ArrayList<String> cachedContentToBeRemoved = new ArrayList<>();
-    for (CachedContent cachedContent : keyToContent.values()) {
-      if (cachedContent.isEmpty()) {
-        cachedContentToBeRemoved.add(cachedContent.key);
-      }
-    }
-    for (int i = 0; i < cachedContentToBeRemoved.size(); i++) {
-      removeEmpty(cachedContentToBeRemoved.get(i));
+    String[] keys = new String[keyToContent.size()];
+    keyToContent.keySet().toArray(keys);
+    for (String key : keys) {
+      maybeRemove(key);
     }
   }
 
@@ -268,7 +257,7 @@ import javax.crypto.spec.SecretKeySpec;
       int count = input.readInt();
       int hashCode = 0;
       for (int i = 0; i < count; i++) {
-        CachedContent cachedContent = new CachedContent(input);
+        CachedContent cachedContent = CachedContent.readFromStream(input);
         add(cachedContent);
         hashCode += cachedContent.headerHashCode();
       }
@@ -348,7 +337,8 @@ import javax.crypto.spec.SecretKeySpec;
 
   private CachedContent addNew(String key, long length) {
     int id = getNewId(idToKey);
-    CachedContent cachedContent = new CachedContent(id, key, length);
+    CachedContent cachedContent = new CachedContent(id, key);
+    cachedContent.setLength(length);
     addNew(cachedContent);
     return cachedContent;
   }

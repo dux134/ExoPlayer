@@ -24,7 +24,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelectorResult;
  */
 /* package */ final class PlaybackInfo {
 
-  public final @Nullable Timeline timeline;
+  public final Timeline timeline;
   public final @Nullable Object manifest;
   public final MediaPeriodId periodId;
   public final long startPositionUs;
@@ -37,11 +37,11 @@ import com.google.android.exoplayer2.trackselection.TrackSelectorResult;
   public volatile long bufferedPositionUs;
 
   public PlaybackInfo(
-      @Nullable Timeline timeline, long startPositionUs, TrackSelectorResult trackSelectorResult) {
+      Timeline timeline, long startPositionUs, TrackSelectorResult trackSelectorResult) {
     this(
         timeline,
         /* manifest= */ null,
-        new MediaPeriodId(0),
+        new MediaPeriodId(/* periodIndex= */ 0),
         startPositionUs,
         /* contentPositionUs =*/ C.TIME_UNSET,
         Player.STATE_IDLE,
@@ -50,7 +50,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelectorResult;
   }
 
   public PlaybackInfo(
-      @Nullable Timeline timeline,
+      Timeline timeline,
       @Nullable Object manifest,
       MediaPeriodId periodId,
       long startPositionUs,
@@ -70,11 +70,6 @@ import com.google.android.exoplayer2.trackselection.TrackSelectorResult;
     this.trackSelectorResult = trackSelectorResult;
   }
 
-  public PlaybackInfo fromNewPosition(int periodIndex, long startPositionUs,
-      long contentPositionUs) {
-    return fromNewPosition(new MediaPeriodId(periodIndex), startPositionUs, contentPositionUs);
-  }
-
   public PlaybackInfo fromNewPosition(MediaPeriodId periodId, long startPositionUs,
       long contentPositionUs) {
     return new PlaybackInfo(
@@ -82,7 +77,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelectorResult;
         manifest,
         periodId,
         startPositionUs,
-        contentPositionUs,
+        periodId.isAd() ? contentPositionUs : C.TIME_UNSET,
         playbackState,
         isLoading,
         trackSelectorResult);

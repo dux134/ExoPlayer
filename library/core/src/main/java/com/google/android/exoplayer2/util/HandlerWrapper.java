@@ -25,36 +25,37 @@ import android.os.Message;
  */
 public interface HandlerWrapper {
 
-  /**  Handler#getLooper(). */
+
+  /** @see Handler#getLooper() */
   Looper getLooper();
 
-  /**  Handler#obtainMessage(int). */
+  /** @see Handler#obtainMessage(int) */
   Message obtainMessage(int what);
 
-  /**  Handler#obtainMessage(int, Object). */
+  /** @see Handler#obtainMessage(int, Object) */
   Message obtainMessage(int what, Object obj);
 
-  /**  Handler#obtainMessage(int, int, int). */
+  /** @see Handler#obtainMessage(int, int, int) */
   Message obtainMessage(int what, int arg1, int arg2);
 
-  /**  Handler#obtainMessage(int, int, int, Object). */
+  /** @see Handler#obtainMessage(int, int, int, Object) */
   Message obtainMessage(int what, int arg1, int arg2, Object obj);
 
-  /**  Handler#sendEmptyMessage(int). */
+  /** @see Handler#sendEmptyMessage(int) */
   boolean sendEmptyMessage(int what);
 
-  /**  Handler#sendEmptyMessageAtTime(int, long). */
+  /** @see Handler#sendEmptyMessageAtTime(int, long) */
   boolean sendEmptyMessageAtTime(int what, long uptimeMs);
 
-  /**  Handler#removeMessages(int). */
+  /** @see Handler#removeMessages(int) */
   void removeMessages(int what);
 
-  /**  Handler#removeCallbacksAndMessages(Object). */
+  /** @see Handler#removeCallbacksAndMessages(Object) */
   void removeCallbacksAndMessages(Object token);
 
-  /**  Handler#post(Runnable). */
+  /** @see Handler#post(Runnable) */
   boolean post(Runnable runnable);
 
-  /**  Handler#postDelayed(Runnable, long). */
+  /** @see Handler#postDelayed(Runnable, long) */
   boolean postDelayed(Runnable runnable, long delayMs);
 }

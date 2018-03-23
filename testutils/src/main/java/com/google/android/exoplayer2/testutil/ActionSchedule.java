@@ -29,6 +29,7 @@ import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.testutil.Action.ClearVideoSurface;
 import com.google.android.exoplayer2.testutil.Action.ExecuteRunnable;
+import com.google.android.exoplayer2.testutil.Action.PlayUntilPosition;
 import com.google.android.exoplayer2.testutil.Action.PrepareSource;
 import com.google.android.exoplayer2.testutil.Action.Seek;
 import com.google.android.exoplayer2.testutil.Action.SendMessages;
@@ -39,6 +40,7 @@ import com.google.android.exoplayer2.testutil.Action.SetRepeatMode;
 import com.google.android.exoplayer2.testutil.Action.SetShuffleModeEnabled;
 import com.google.android.exoplayer2.testutil.Action.SetVideoSurface;
 import com.google.android.exoplayer2.testutil.Action.Stop;
+import com.google.android.exoplayer2.testutil.Action.ThrowPlaybackException;
 import com.google.android.exoplayer2.testutil.Action.WaitForPlaybackState;
 import com.google.android.exoplayer2.testutil.Action.WaitForPositionDiscontinuity;
 import com.google.android.exoplayer2.testutil.Action.WaitForSeekProcessed;
@@ -230,6 +232,29 @@ public final class ActionSchedule {
     }
 
     /**
+     * Schedules a play action to be executed, waits until the player reaches the specified
+     * position, and pauses the player again.
+     *
+     * @param windowIndex The window index at which the player should be paused again.
+     * @param positionMs The position in that window at which the player should be paused again.
+     * @return The builder, for convenience.
+     */
+    public Builder playUntilPosition(int windowIndex, long positionMs) {
+      return apply(new PlayUntilPosition(tag, windowIndex, positionMs));
+    }
+
+    /**
+     * Schedules a play action to be executed, waits until the player reaches the start of the
+     * specified window, and pauses the player again.
+     *
+     * @param windowIndex The window index at which the player should be paused again.
+     * @return The builder, for convenience.
+     */
+    public Builder playUntilStartOfWindow(int windowIndex) {
+      return apply(new PlayUntilPosition(tag, windowIndex, /* positionMs= */ 0));
+    }
+
+    /**
      * Schedules a pause action to be executed.
      *
      * @return The builder, for convenience.
@@ -386,6 +411,16 @@ public final class ActionSchedule {
      */
     public Builder executeRunnable(Runnable runnable) {
       return apply(new ExecuteRunnable(tag, runnable));
+    }
+
+    /**
+     * Schedules to throw a playback exception on the playback thread.
+     *
+     * @param exception The exception to throw.
+     * @return The builder, for convenience.
+     */
+    public Builder throwPlaybackException(ExoPlaybackException exception) {
+      return apply(new ThrowPlaybackException(tag, exception));
     }
 
     public ActionSchedule build() {

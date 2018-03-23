@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -159,7 +160,7 @@ public final class Util {
    */
   public static boolean isLocalFileUri(Uri uri) {
     String scheme = uri.getScheme();
-    return TextUtils.isEmpty(scheme) || scheme.equals("file");
+    return TextUtils.isEmpty(scheme) || "file".equals(scheme);
   }
 
   /**
@@ -261,7 +262,7 @@ public final class Util {
     try {
       return language == null ? null : new Locale(language).getISO3Language();
     } catch (MissingResourceException e) {
-      return language.toLowerCase();
+      return toLowerInvariant(language);
     }
   }
 
@@ -462,39 +463,6 @@ public final class Util {
   }
 
   /**
-   * Returns the index of the smallest element in {@code array} that is greater than (or optionally
-   * equal to) a specified {@code value}.
-   * <p>
-   * The search is performed using a binary search algorithm, so the array must be sorted. If
-   * the array contains multiple elements equal to {@code value} and {@code inclusive} is true, the
-   * index of the last one will be returned.
-   *
-   * @param array The array to search.
-   * @param value The value being searched for.
-   * @param inclusive If the value is present in the array, whether to return the corresponding
-   *     index. If false then the returned index corresponds to the smallest element strictly
-   *     greater than the value.
-   * @param stayInBounds If true, then {@code (a.length - 1)} will be returned in the case that the
-   *     value is greater than the largest element in the array. If false then {@code a.length} will
-   *     be returned.
-   * @return The index of the smallest element in {@code array} that is greater than (or optionally
-   *     equal to) {@code value}.
-   */
-  public static int binarySearchCeil(long[] array, long value, boolean inclusive,
-      boolean stayInBounds) {
-    int index = Arrays.binarySearch(array, value);
-    if (index < 0) {
-      index = ~index;
-    } else {
-      while ((++index) < array.length && array[index] == value) {}
-      if (inclusive) {
-        index--;
-      }
-    }
-    return stayInBounds ? Math.min(array.length - 1, index) : index;
-  }
-
-  /**
    * Returns the index of the largest element in {@code list} that is less than (or optionally equal
    * to) a specified {@code value}.
    * <p>
@@ -525,6 +493,39 @@ public final class Util {
       }
     }
     return stayInBounds ? Math.max(0, index) : index;
+  }
+
+  /**
+   * Returns the index of the smallest element in {@code array} that is greater than (or optionally
+   * equal to) a specified {@code value}.
+   *
+   * <p>The search is performed using a binary search algorithm, so the array must be sorted. If the
+   * array contains multiple elements equal to {@code value} and {@code inclusive} is true, the
+   * index of the last one will be returned.
+   *
+   * @param array The array to search.
+   * @param value The value being searched for.
+   * @param inclusive If the value is present in the array, whether to return the corresponding
+   *     index. If false then the returned index corresponds to the smallest element strictly
+   *     greater than the value.
+   * @param stayInBounds If true, then {@code (a.length - 1)} will be returned in the case that the
+   *     value is greater than the largest element in the array. If false then {@code a.length} will
+   *     be returned.
+   * @return The index of the smallest element in {@code array} that is greater than (or optionally
+   *     equal to) {@code value}.
+   */
+  public static int binarySearchCeil(
+      long[] array, long value, boolean inclusive, boolean stayInBounds) {
+    int index = Arrays.binarySearch(array, value);
+    if (index < 0) {
+      index = ~index;
+    } else {
+      while ((++index) < array.length && array[index] == value) {}
+      if (inclusive) {
+        index--;
+      }
+    }
+    return stayInBounds ? Math.min(array.length - 1, index) : index;
   }
 
   /**
@@ -628,7 +629,7 @@ public final class Util {
     } else {
       timezoneShift = ((Integer.parseInt(matcher.group(12)) * 60
           + Integer.parseInt(matcher.group(13))));
-      if (matcher.group(11).equals("-")) {
+      if ("-".equals(matcher.group(11))) {
         timezoneShift *= -1;
       }
     }
@@ -941,6 +942,16 @@ public final class Util {
   }
 
   /**
+   * Returns whether {@code encoding} is high resolution (&gt; 16-bit) integer PCM.
+   *
+   * @param encoding The encoding of the audio data.
+   * @return Whether the encoding is high resolution integer PCM.
+   */
+  public static boolean isEncodingHighResolutionIntegerPcm(@C.PcmEncoding int encoding) {
+    return encoding == C.ENCODING_PCM_24BIT || encoding == C.ENCODING_PCM_32BIT;
+  }
+
+  /**
    * Returns the frame size for audio with {@code channelCount} channels in the specified encoding.
    *
    * @param pcmEncoding The encoding of the audio data.
@@ -1041,6 +1052,30 @@ public final class Util {
       case C.USAGE_UNKNOWN:
       default:
         return C.STREAM_TYPE_DEFAULT;
+    }
+  }
+
+  /**
+   * Derives a DRM {@link UUID} from {@code drmScheme}.
+   *
+   * @param drmScheme A UUID string, or {@code "widevine"}, {@code "playready"} or {@code
+   *     "clearkey"}.
+   * @return The derived {@link UUID}, or {@code null} if one could not be derived.
+   */
+  public static UUID getDrmUuid(String drmScheme) {
+    switch (Util.toLowerInvariant(drmScheme)) {
+      case "widevine":
+        return C.WIDEVINE_UUID;
+      case "playready":
+        return C.PLAYREADY_UUID;
+      case "clearkey":
+        return C.CLEARKEY_UUID;
+      default:
+        try {
+          return UUID.fromString(drmScheme);
+        } catch (RuntimeException e) {
+          return null;
+        }
     }
   }
 
@@ -1299,7 +1334,11 @@ public final class Util {
       if ("Sony".equals(Util.MANUFACTURER) && Util.MODEL.startsWith("BRAVIA")
           && context.getPackageManager().hasSystemFeature("com.sony.dtv.hardware.panel.qfhd")) {
         return new Point(3840, 2160);
-      } else if ("NVIDIA".equals(Util.MANUFACTURER) && Util.MODEL.contains("SHIELD")) {
+      } else if (("NVIDIA".equals(Util.MANUFACTURER) && Util.MODEL.contains("SHIELD"))
+          || ("philips".equals(Util.toLowerInvariant(Util.MANUFACTURER))
+              && (Util.MODEL.startsWith("QM1")
+                  || Util.MODEL.equals("QV151E")
+                  || Util.MODEL.equals("TPM171E")))) {
         // Attempt to read sys.display-size.
         String sysDisplaySize = null;
         try {

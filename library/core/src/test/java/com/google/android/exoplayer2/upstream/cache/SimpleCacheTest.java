@@ -41,13 +41,11 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
-import org.robolectric.annotation.Config;
 
 /**
  * Unit tests for {@link SimpleCache}.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = Config.TARGET_SDK, manifest = Config.NONE)
 public class SimpleCacheTest {
 
   private static final String KEY_1 = "key1";
@@ -75,7 +73,6 @@ public class SimpleCacheTest {
 
     assertThat(simpleCache.startReadWriteNonBlocking(KEY_1, 0)).isNull();
 
-    assertThat(simpleCache.getKeys()).isEmpty();
     NavigableSet<CacheSpan> cachedSpans = simpleCache.getCachedSpans(KEY_1);
     assertThat(cachedSpans.isEmpty()).isTrue();
     assertThat(simpleCache.getCacheSpace()).isEqualTo(0);
@@ -84,11 +81,9 @@ public class SimpleCacheTest {
     addCache(simpleCache, KEY_1, 0, 15);
 
     Set<String> cachedKeys = simpleCache.getKeys();
-    assertThat(cachedKeys).hasSize(1);
-    assertThat(cachedKeys.contains(KEY_1)).isTrue();
+    assertThat(cachedKeys).containsExactly(KEY_1);
     cachedSpans = simpleCache.getCachedSpans(KEY_1);
-    assertThat(cachedSpans).hasSize(1);
-    assertThat(cachedSpans.contains(cacheSpan1)).isTrue();
+    assertThat(cachedSpans).contains(cacheSpan1);
     assertThat(simpleCache.getCacheSpace()).isEqualTo(15);
 
     simpleCache.releaseHoleSpan(cacheSpan1);

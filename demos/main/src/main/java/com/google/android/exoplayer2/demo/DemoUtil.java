@@ -16,6 +16,7 @@
 package com.google.android.exoplayer2.demo;
 
 import android.text.TextUtils;
+
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.drm.HttpMediaDrmCallback;
@@ -24,6 +25,7 @@ import com.google.android.exoplayer2.drm.UnsupportedDrmException;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
+
 import java.util.Locale;
 import java.util.UUID;
 
@@ -33,6 +35,7 @@ import java.util.UUID;
 /* package */ final class DemoUtil {
 
   /**
+<<<<<<< HEAD
    * Derives a DRM {@link UUID} from {@code drmScheme}.
    *
    * @param drmScheme A protection scheme UUID string; or {@code "widevine"}, {@code "playready"} or
@@ -75,6 +78,8 @@ import java.util.UUID;
   }
 
   /**
+=======
+>>>>>>> upstream/dev-v2
    * Builds a track name for display.
    *
    * @param format {@link Format} of the track.

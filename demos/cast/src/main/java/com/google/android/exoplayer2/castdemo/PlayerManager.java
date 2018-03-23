@@ -25,13 +25,14 @@ import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Player.DefaultEventListener;
 import com.google.android.exoplayer2.Player.DiscontinuityReason;
+import com.google.android.exoplayer2.Player.TimelineChangeReason;
 import com.google.android.exoplayer2.RenderersFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.Timeline.Period;
 import com.google.android.exoplayer2.castdemo.DemoUtil.Sample;
 import com.google.android.exoplayer2.ext.cast.CastPlayer;
-import com.google.android.exoplayer2.source.DynamicConcatenatingMediaSource;
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
@@ -40,8 +41,8 @@ import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.ui.PlaybackControlView;
-import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
+import com.google.android.exoplayer2.ui.PlayerControlView;
+import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.gms.cast.MediaInfo;
@@ -73,47 +74,56 @@ import java.util.ArrayList;
   private static final DefaultHttpDataSourceFactory DATA_SOURCE_FACTORY =
       new DefaultHttpDataSourceFactory(USER_AGENT, BANDWIDTH_METER);
 
-  private final SimpleExoPlayerView exoPlayerView;
-  private final PlaybackControlView castControlView;
+  private final PlayerView localPlayerView;
+  private final PlayerControlView castControlView;
   private final SimpleExoPlayer exoPlayer;
   private final CastPlayer castPlayer;
   private final ArrayList<DemoUtil.Sample> mediaQueue;
-  private final QueuePositionListener listener;
+  private final QueuePositionListener queuePositionListener;
+  private final ConcatenatingMediaSource concatenatingMediaSource;
 
-  private DynamicConcatenatingMediaSource dynamicConcatenatingMediaSource;
   private boolean castMediaQueueCreationPending;
   private int currentItemIndex;
   private Player currentPlayer;
 
   /**
-   * @param listener A {@link QueuePositionListener} for queue position changes.
-   * @param exoPlayerView The {@link SimpleExoPlayerView} for local playback.
-   * @param castControlView The {@link PlaybackControlView} to control remote playback.
+   * @param queuePositionListener A {@link QueuePositionListener} for queue position changes.
+   * @param localPlayerView The {@link PlayerView} for local playback.
+   * @param castControlView The {@link PlayerControlView} to control remote playback.
    * @param context A {@link Context}.
    * @param castContext The {@link CastContext}.
    */
-  public static PlayerManager createPlayerManager(QueuePositionListener listener,
-      SimpleExoPlayerView exoPlayerView, PlaybackControlView castControlView, Context context,
+  public static PlayerManager createPlayerManager(
+      QueuePositionListener queuePositionListener,
+      PlayerView localPlayerView,
+      PlayerControlView castControlView,
+      Context context,
       CastContext castContext) {
-    PlayerManager playerManager = new PlayerManager(listener, exoPlayerView, castControlView,
-        context, castContext);
+    PlayerManager playerManager =
+        new PlayerManager(
+            queuePositionListener, localPlayerView, castControlView, context, castContext);
     playerManager.init();
     return playerManager;
   }
 
-  private PlayerManager(QueuePositionListener listener, SimpleExoPlayerView exoPlayerView,
-      PlaybackControlView castControlView, Context context, CastContext castContext) {
-    this.listener = listener;
-    this.exoPlayerView = exoPlayerView;
+  private PlayerManager(
+      QueuePositionListener queuePositionListener,
+      PlayerView localPlayerView,
+      PlayerControlView castControlView,
+      Context context,
+      CastContext castContext) {
+    this.queuePositionListener = queuePositionListener;
+    this.localPlayerView = localPlayerView;
     this.castControlView = castControlView;
     mediaQueue = new ArrayList<>();
     currentItemIndex = C.INDEX_UNSET;
+    concatenatingMediaSource = new ConcatenatingMediaSource();
 
     DefaultTrackSelector trackSelector = new DefaultTrackSelector(BANDWIDTH_METER);
     RenderersFactory renderersFactory = new DefaultRenderersFactory(context, null);
     exoPlayer = ExoPlayerFactory.newSimpleInstance(renderersFactory, trackSelector);
     exoPlayer.addListener(this);
-    exoPlayerView.setPlayer(exoPlayer);
+    localPlayerView.setPlayer(exoPlayer);
 
     castPlayer = new CastPlayer(castContext);
     castPlayer.addListener(this);
@@ -146,9 +156,8 @@ import java.util.ArrayList;
    */
   public void addItem(Sample sample) {
     mediaQueue.add(sample);
-    if (currentPlayer == exoPlayer) {
-      dynamicConcatenatingMediaSource.addMediaSource(buildMediaSource(sample));
-    } else {
+    concatenatingMediaSource.addMediaSource(buildMediaSource(sample));
+    if (currentPlayer == castPlayer) {
       castPlayer.addItems(buildMediaQueueItem(sample));
     }
   }
@@ -177,9 +186,8 @@ import java.util.ArrayList;
    * @return Whether the removal was successful.
    */
   public boolean removeItem(int itemIndex) {
-    if (currentPlayer == exoPlayer) {
-      dynamicConcatenatingMediaSource.removeMediaSource(itemIndex);
-    } else {
+    concatenatingMediaSource.removeMediaSource(itemIndex);
+    if (currentPlayer == castPlayer) {
       if (castPlayer.getPlaybackState() != Player.STATE_IDLE) {
         Timeline castTimeline = castPlayer.getCurrentTimeline();
         if (castTimeline.getPeriodCount() <= itemIndex) {
@@ -206,9 +214,8 @@ import java.util.ArrayList;
    */
   public boolean moveItem(int fromIndex, int toIndex) {
     // Player update.
-    if (currentPlayer == exoPlayer) {
-      dynamicConcatenatingMediaSource.moveMediaSource(fromIndex, toIndex);
-    } else if (castPlayer.getPlaybackState() != Player.STATE_IDLE) {
+    concatenatingMediaSource.moveMediaSource(fromIndex, toIndex);
+    if (currentPlayer == castPlayer && castPlayer.getPlaybackState() != Player.STATE_IDLE) {
       Timeline castTimeline = castPlayer.getCurrentTimeline();
       int periodCount = castTimeline.getPeriodCount();
       if (periodCount <= fromIndex || periodCount <= toIndex) {
@@ -242,7 +249,7 @@ import java.util.ArrayList;
    */
   public boolean dispatchKeyEvent(KeyEvent event) {
     if (currentPlayer == exoPlayer) {
-      return exoPlayerView.dispatchKeyEvent(event);
+      return localPlayerView.dispatchKeyEvent(event);
     } else /* currentPlayer == castPlayer */ {
       return castControlView.dispatchKeyEvent(event);
     }
@@ -254,9 +261,10 @@ import java.util.ArrayList;
   public void release() {
     currentItemIndex = C.INDEX_UNSET;
     mediaQueue.clear();
+    concatenatingMediaSource.clear();
     castPlayer.setSessionAvailabilityListener(null);
     castPlayer.release();
-    exoPlayerView.setPlayer(null);
+    localPlayerView.setPlayer(null);
     exoPlayer.release();
   }
 
@@ -273,8 +281,12 @@ import java.util.ArrayList;
   }
 
   @Override
-  public void onTimelineChanged(Timeline timeline, Object manifest) {
+  public void onTimelineChanged(
+      Timeline timeline, Object manifest, @TimelineChangeReason int reason) {
     updateCurrentItemIndex();
+    if (timeline.isEmpty()) {
+      castMediaQueueCreationPending = true;
+    }
   }
 
   // CastPlayer.SessionAvailabilityListener implementation.
@@ -309,10 +321,10 @@ import java.util.ArrayList;
 
     // View management.
     if (currentPlayer == exoPlayer) {
-      exoPlayerView.setVisibility(View.VISIBLE);
+      localPlayerView.setVisibility(View.VISIBLE);
       castControlView.hide();
     } else /* currentPlayer == castPlayer */ {
-      exoPlayerView.setVisibility(View.GONE);
+      localPlayerView.setVisibility(View.GONE);
       castControlView.show();
     }
 
@@ -341,11 +353,7 @@ import java.util.ArrayList;
     // Media queue management.
     castMediaQueueCreationPending = currentPlayer == castPlayer;
     if (currentPlayer == exoPlayer) {
-      dynamicConcatenatingMediaSource = new DynamicConcatenatingMediaSource();
-      for (int i = 0; i < mediaQueue.size(); i++) {
-        dynamicConcatenatingMediaSource.addMediaSource(buildMediaSource(mediaQueue.get(i)));
-      }
-      exoPlayer.prepare(dynamicConcatenatingMediaSource);
+      exoPlayer.prepare(concatenatingMediaSource);
     }
 
     // Playback transition.
@@ -380,7 +388,7 @@ import java.util.ArrayList;
     if (this.currentItemIndex != currentItemIndex) {
       int oldIndex = this.currentItemIndex;
       this.currentItemIndex = currentItemIndex;
-      listener.onQueuePositionChanged(oldIndex, currentItemIndex);
+      queuePositionListener.onQueuePositionChanged(oldIndex, currentItemIndex);
     }
   }
 
