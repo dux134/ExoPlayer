@@ -58,6 +58,8 @@ public final class EventStream {
 
   /**
    * A constructed id of this {@link EventStream}. Equal to {@code schemeIdUri + "/" + value}.
+   *
+   * @return id
    */
   public String id() {
     return schemeIdUri + "/" + value;

@@ -169,6 +169,7 @@ public final class DashMediaSource extends BaseMediaSource {
      * @param manifest The manifest. {@link DashManifest#dynamic} must be false.
      * @return The new {@link DashMediaSource}.
      * @throws IllegalArgumentException If {@link DashManifest#dynamic} is true.
+     *
      */
     public DashMediaSource createMediaSource(DashManifest manifest) {
       Assertions.checkArgument(!manifest.dynamic);
@@ -187,6 +188,12 @@ public final class DashMediaSource extends BaseMediaSource {
     /**
      * @deprecated Use {@link #createMediaSource(DashManifest)} and {@link
      *     #addEventListener(Handler, MediaSourceEventListener)} instead.
+     *
+     * @param manifest The manifest. {@link DashManifest#dynamic} must be false.
+     * @param eventHandler event handler
+     * @param eventListener event listener
+     *
+     * @return The new {@link DashMediaSource}.
      */
     @Deprecated
     public DashMediaSource createMediaSource(
@@ -226,6 +233,10 @@ public final class DashMediaSource extends BaseMediaSource {
     /**
      * @deprecated Use {@link #createMediaSource(Uri)} and {@link #addEventListener(Handler,
      *     MediaSourceEventListener)} instead.
+     * @param eventHandler event handler
+     * @param eventListener event listener
+     * @param manifestUri manifest Uri
+     * @return The new {@link DashMediaSource}.
      */
     @Deprecated
     public DashMediaSource createMediaSource(

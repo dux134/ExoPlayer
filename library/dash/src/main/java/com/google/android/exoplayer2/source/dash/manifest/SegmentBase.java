@@ -54,7 +54,7 @@ public abstract class SegmentBase {
   }
 
   /**
-   * Returns the presentation time offset, in microseconds.
+   * @return Returns the presentation time offset, in microseconds.
    */
   public long getPresentationTimeOffsetUs() {
     return Util.scaleLargeTimestamp(presentationTimeOffset, C.MICROS_PER_SECOND, timescale);
@@ -130,7 +130,10 @@ public abstract class SegmentBase {
       this.segmentTimeline = segmentTimeline;
     }
 
-    /** @see DashSegmentIndex#getSegmentNum(long, long) */
+    /** @see DashSegmentIndex#getSegmentNum(long, long)
+     *
+     * @return get the segment number
+     * */
     public long getSegmentNum(long timeUs, long periodDurationUs) {
       final long firstSegmentNum = getFirstSegmentNum();
       final long segmentCount = getSegmentCount(periodDurationUs);
@@ -164,7 +167,10 @@ public abstract class SegmentBase {
       }
     }
 
-    /** @see DashSegmentIndex#getDurationUs(long, long) */
+    /** @see DashSegmentIndex#getDurationUs(long, long)
+     *
+     * @return get segment duration in microseconds
+     * */
     public final long getSegmentDurationUs(long sequenceNumber, long periodDurationUs) {
       if (segmentTimeline != null) {
         long duration = segmentTimeline.get((int) (sequenceNumber - startNumber)).duration;
@@ -178,7 +184,10 @@ public abstract class SegmentBase {
       }
     }
 
-    /** @see DashSegmentIndex#getTimeUs(long) */
+    /** @see DashSegmentIndex#getTimeUs(long)
+     *
+     * @return get segment time in microseconds
+     * */
     public final long getSegmentTimeUs(long sequenceNumber) {
       long unscaledSegmentTime;
       if (segmentTimeline != null) {

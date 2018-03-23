@@ -55,7 +55,13 @@ public final class DashDownloadAction extends SegmentDownloadAction<Representati
 
   private static final String TYPE = "DashDownloadAction";
 
-  /** @see SegmentDownloadAction#SegmentDownloadAction(Uri, boolean, String, Object[]) */
+  /** @see SegmentDownloadAction#SegmentDownloadAction(Uri, boolean, String, Object[])
+   *  @param manifestUri  The {@link Uri} of the manifest to be downloaded.
+   * @param removeAction Whether the data will be removed. If {@code false} it will be downloaded.
+   * @param data         Optional custom data for this action. If null, an empty string is used.
+   * @param keys         Keys of representations to be downloaded. If empty, all representations are
+   *                     downloaded. If {@code removeAction} is true, {@code keys} should be an empty array.
+   */
   public DashDownloadAction(Uri manifestUri, boolean removeAction, String data,
       RepresentationKey... keys) {
     super(manifestUri, removeAction, data, keys);
