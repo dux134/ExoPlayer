@@ -229,7 +229,10 @@ public final class DownloadManager {
     return downloadTask;
   }
 
-  /** Returns number of tasks. */
+  /** Returns number of tasks.
+   *
+   * @return number of tasks
+   */
   public int getTaskCount() {
     return tasks.size();
   }
@@ -245,17 +248,25 @@ public final class DownloadManager {
     return null;
   }
 
-  /** Returns {@link DownloadState}s for all tasks. */
+  /** Returns {@link DownloadState}s for all tasks.
+   *
+   * @return array of download states
+   */
   public DownloadState[] getDownloadStates() {
     return getDownloadStates(tasks);
   }
 
-  /** Returns an array of {@link DownloadState}s for active download tasks. */
+  /** Returns an array of {@link DownloadState}s for active download tasks.
+   * @return array of download states
+   * */
   public DownloadState[] getActiveDownloadStates() {
     return getDownloadStates(activeDownloadTasks);
   }
 
-  /** Returns whether there are no active tasks. */
+  /** Returns whether there are no active tasks.
+   *
+   * @return whether idle or not
+   * */
   public boolean isIdle() {
     if (!actionFileLoadCompleted) {
       return false;
@@ -446,9 +457,9 @@ public final class DownloadManager {
      * <p>Transition diagram:
      *
      * <pre>
-     *                    -> canceled
-     * queued <-> started -> ended
-     *                    -> error
+     *                    to canceled
+     * queued to either ways started to ended
+     *                    to error
      * </pre>
      */
     @Retention(RetentionPolicy.SOURCE)

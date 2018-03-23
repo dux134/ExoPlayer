@@ -43,11 +43,7 @@ public interface Clock {
    * Creates a {@link HandlerWrapper} using a specified looper and a specified callback for handling
    * messages.
    *
-<<<<<<< HEAD
-   * Handler#Handler(Looper, Handler.Callback).
-=======
    * @see Handler#Handler(Looper, Handler.Callback)
->>>>>>> upstream/dev-v2
    */
   HandlerWrapper createHandler(Looper looper, @Nullable Handler.Callback callback);
 }

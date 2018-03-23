@@ -49,7 +49,12 @@ public abstract class SegmentDownloader<M, K> implements Downloader {
     /** The {@link DataSpec} of the segment. */
     public final DataSpec dataSpec;
 
-    /** Constructs a Segment. */
+    /** Constructs a Segment.
+     *
+     * @param startTimeUs The start time
+     * @param dataSpec the data spec
+     */
+
     public Segment(long startTimeUs, DataSpec dataSpec) {
       this.startTimeUs = startTimeUs;
       this.dataSpec = dataSpec;
@@ -102,6 +107,8 @@ public abstract class SegmentDownloader<M, K> implements Downloader {
   /**
    * Selects multiple representations pointed to by the keys for downloading, checking status. Any
    * previous selection is cleared. If keys array is empty, all representations are downloaded.
+   *
+   * @param keys the representation keys.
    */
   public final void selectRepresentations(K[] keys) {
     this.keys = keys.length > 0 ? keys.clone() : null;
@@ -179,6 +186,7 @@ public abstract class SegmentDownloader<M, K> implements Downloader {
    * C#LENGTH_UNSET} if it hasn't been calculated yet.
    *
    * @see #init()
+   * @return the total number of segments
    */
   public final int getTotalSegments() {
     return totalSegments;
@@ -189,6 +197,8 @@ public abstract class SegmentDownloader<M, K> implements Downloader {
    * {@link C#LENGTH_UNSET} if it hasn't been calculated yet.
    *
    * @see #init()
+   *
+   * @return the total number of segments
    */
   public final int getDownloadedSegments() {
     return downloadedSegments;
@@ -199,6 +209,8 @@ public abstract class SegmentDownloader<M, K> implements Downloader {
    * {@link C#LENGTH_UNSET} if it hasn't been calculated yet.
    *
    * @see #init()
+   *
+   * @return the total number of bytes
    */
   @Override
   public final long getDownloadedBytes() {

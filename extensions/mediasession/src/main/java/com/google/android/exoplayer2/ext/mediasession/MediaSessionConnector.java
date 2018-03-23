@@ -171,34 +171,45 @@ public final class MediaSessionConnector {
     long getSupportedPlaybackActions(@Nullable Player player);
     /**
      * See {@link MediaSessionCompat.Callback#onPlay()}.
+     * @param player The player of which the current window index of the timeline has changed.
      */
     void onPlay(Player player);
     /**
      * See {@link MediaSessionCompat.Callback#onPause()}.
+     * @param player The player of which the current window index of the timeline has changed.
      */
     void onPause(Player player);
     /**
      * See {@link MediaSessionCompat.Callback#onSeekTo(long)}.
+     * @param player The player of which the current window index of the timeline has changed.
+     * @param position position
      */
     void onSeekTo(Player player, long position);
     /**
      * See {@link MediaSessionCompat.Callback#onFastForward()}.
+     * @param player The player of which the current window index of the timeline has changed.
      */
     void onFastForward(Player player);
     /**
      * See {@link MediaSessionCompat.Callback#onRewind()}.
+     * @param player - player
      */
     void onRewind(Player player);
     /**
      * See {@link MediaSessionCompat.Callback#onStop()}.
+     * @param player The player of which the current window index of the timeline has changed.
      */
     void onStop(Player player);
     /**
      * See {@link MediaSessionCompat.Callback#onSetShuffleMode(int)}.
+     * @param player The player of which the current window index of the timeline has changed.
+     * @param shuffleMode - shuffle mode
      */
     void onSetShuffleMode(Player player, int shuffleMode);
     /**
      * See {@link MediaSessionCompat.Callback#onSetRepeatMode(int)}.
+     * @param player The player of which the current window index of the timeline has changed.
+     * @param repeatMode - shuffle mode
      */
     void onSetRepeatMode(Player player, int repeatMode);
   }
@@ -248,14 +259,18 @@ public final class MediaSessionConnector {
     long getActiveQueueItemId(@Nullable Player player);
     /**
      * See {@link MediaSessionCompat.Callback#onSkipToPrevious()}.
+     * @param player The player
      */
     void onSkipToPrevious(Player player);
     /**
      * See {@link MediaSessionCompat.Callback#onSkipToQueueItem(long)}.
+     * @param player The player
+     * @param id The id
      */
     void onSkipToQueueItem(Player player, long id);
     /**
      * See {@link MediaSessionCompat.Callback#onSkipToNext()}.
+     * @param player The player
      */
     void onSkipToNext(Player player);
   }
@@ -267,20 +282,34 @@ public final class MediaSessionConnector {
 
     /**
      * See {@link MediaSessionCompat.Callback#onAddQueueItem(MediaDescriptionCompat description)}.
+     * @param player The player
+     * @param description The {@link MediaDescriptionCompat} for creating the {@link MediaSessionCompat.QueueItem}
+     *            to be inserted.
      */
     void onAddQueueItem(Player player, MediaDescriptionCompat description);
     /**
      * See {@link MediaSessionCompat.Callback#onAddQueueItem(MediaDescriptionCompat description,
      * int index)}.
+     *
+     * @param player The player
+     * @param description The {@link MediaDescriptionCompat} for creating the {@link MediaSessionCompat.QueueItem}
+     *            to be inserted.
+     * @param index index
      */
     void onAddQueueItem(Player player, MediaDescriptionCompat description, int index);
     /**
      * See {@link MediaSessionCompat.Callback#onRemoveQueueItem(MediaDescriptionCompat
      * description)}.
+     *
+     * @param player The player
+     * @param description The {@link MediaDescriptionCompat} for creating the {@link MediaSessionCompat.QueueItem}
+     *            to be inserted.
      */
     void onRemoveQueueItem(Player player, MediaDescriptionCompat description);
     /**
      * See {@link MediaSessionCompat.Callback#onRemoveQueueItemAt(int index)}.
+     * @param player The player
+     * @param index The index of the element to be removed.
      */
     void onRemoveQueueItemAt(Player player, int index);
   }
@@ -290,7 +319,11 @@ public final class MediaSessionConnector {
 
     long ACTIONS = PlaybackStateCompat.ACTION_SET_RATING;
 
-    /** See {@link MediaSessionCompat.Callback#onSetRating(RatingCompat)}. */
+    /** See {@link MediaSessionCompat.Callback#onSetRating(RatingCompat)}.
+     *
+     * @param player The player
+     * @param rating The rating being set.
+     */
     void onSetRating(Player player, RatingCompat rating);
   }
 

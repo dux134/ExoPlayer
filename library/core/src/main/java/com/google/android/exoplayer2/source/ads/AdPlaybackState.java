@@ -316,6 +316,9 @@ public final class AdPlaybackState {
   /**
    * Returns an instance with the number of ads in {@code adGroupIndex} resolved to {@code adCount}.
    * The ad count must be greater than zero.
+   *
+   * @param adCount number of ads
+   * @param adGroupIndex the group index
    */
   @CheckResult
   public AdPlaybackState withAdCount(int adGroupIndex, int adCount) {
@@ -328,7 +331,13 @@ public final class AdPlaybackState {
     return new AdPlaybackState(adGroupTimesUs, adGroups, adResumePositionUs, contentDurationUs);
   }
 
-  /** Returns an instance with the specified ad URI. */
+  /** Returns an instance with the specified ad URI.
+   *
+   * @param adGroupIndex the target group index
+   * @param adIndexInAdGroup the target index in ad group
+   * @param uri ad uri
+   * @return Playback state
+   */
   @CheckResult
   public AdPlaybackState withAdUri(int adGroupIndex, int adIndexInAdGroup, Uri uri) {
     AdGroup[] adGroups = Arrays.copyOf(this.adGroups, this.adGroups.length);
@@ -336,7 +345,12 @@ public final class AdPlaybackState {
     return new AdPlaybackState(adGroupTimesUs, adGroups, adResumePositionUs, contentDurationUs);
   }
 
-  /** Returns an instance with the specified ad marked as played. */
+  /** Returns an instance with the specified ad marked as played.
+   *
+   * @param adGroupIndex the target group index
+   * @param adIndexInAdGroup the target index in ad group
+   * @return Playback state
+   */
   @CheckResult
   public AdPlaybackState withPlayedAd(int adGroupIndex, int adIndexInAdGroup) {
     AdGroup[] adGroups = Arrays.copyOf(this.adGroups, this.adGroups.length);
@@ -344,7 +358,12 @@ public final class AdPlaybackState {
     return new AdPlaybackState(adGroupTimesUs, adGroups, adResumePositionUs, contentDurationUs);
   }
 
-  /** Returns an instance with the specified ad marked as having a load error. */
+  /** Returns an instance with the specified ad marked as having a load error.
+   *
+   * @param adGroupIndex the target group index
+   * @param adIndexInAdGroup the target index in ad group
+   * @return Playback state
+   */
   @CheckResult
   public AdPlaybackState withAdLoadError(int adGroupIndex, int adIndexInAdGroup) {
     AdGroup[] adGroups = Arrays.copyOf(this.adGroups, this.adGroups.length);
@@ -355,6 +374,10 @@ public final class AdPlaybackState {
   /**
    * Returns an instance with all ads in the specified ad group skipped (except for those already
    * marked as played or in the error state).
+   *
+   *
+   * @param adGroupIndex the target group index
+   * @return Playback state
    */
   @CheckResult
   public AdPlaybackState withSkippedAdGroup(int adGroupIndex) {
@@ -363,7 +386,11 @@ public final class AdPlaybackState {
     return new AdPlaybackState(adGroupTimesUs, adGroups, adResumePositionUs, contentDurationUs);
   }
 
-  /** Returns an instance with the specified ad durations, in microseconds. */
+  /** Returns an instance with the specified ad durations, in microseconds.
+   *
+   * @param adDurationUs the duration in micro seconds.
+   * @return Playback state
+   */
   @CheckResult
   public AdPlaybackState withAdDurationsUs(long[][] adDurationUs) {
     AdGroup[] adGroups = Arrays.copyOf(this.adGroups, this.adGroups.length);
@@ -373,7 +400,11 @@ public final class AdPlaybackState {
     return new AdPlaybackState(adGroupTimesUs, adGroups, adResumePositionUs, contentDurationUs);
   }
 
-  /** Returns an instance with the specified ad resume position, in microseconds. */
+  /** Returns an instance with the specified ad resume position, in microseconds.
+   *
+   * @param adResumePositionUs the duration in micro seconds.
+   * @return Playback state
+   */
   @CheckResult
   public AdPlaybackState withAdResumePositionUs(long adResumePositionUs) {
     if (this.adResumePositionUs == adResumePositionUs) {
@@ -383,7 +414,10 @@ public final class AdPlaybackState {
     }
   }
 
-  /** Returns an instance with the specified content duration, in microseconds. */
+  /** Returns an instance with the specified content duration, in microseconds.
+   * @param contentDurationUs the duration in micro seconds.
+   * @return Playback state
+   */
   @CheckResult
   public AdPlaybackState withContentDurationUs(long contentDurationUs) {
     if (this.contentDurationUs == contentDurationUs) {

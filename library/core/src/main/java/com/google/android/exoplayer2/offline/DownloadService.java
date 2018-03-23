@@ -214,6 +214,8 @@ public abstract class DownloadService extends Service implements DownloadManager
   /**
    * Returns a {@link DownloadManager} to be used to downloaded content. Called only once in the
    * life cycle of the service.
+   *
+   * @return DownloadManager
    */
   protected abstract DownloadManager getDownloadManager();
 
@@ -221,28 +223,45 @@ public abstract class DownloadService extends Service implements DownloadManager
    * Returns a {@link Scheduler} which contains a job to initialize {@link DownloadService} when the
    * requirements are met, or null. If not null, scheduler is used to start downloads even when the
    * app isn't running.
+   *
+   * @return Scheduler
    */
   protected abstract @Nullable Scheduler getScheduler();
 
-  /** Returns requirements for downloads to take place, or null. */
+  /** Returns requirements for downloads to take place, or null.
+   * @return Requirements
+   * */
   protected abstract @Nullable Requirements getRequirements();
 
-  /** Called on error in start command. */
+  /** Called on error in start command.
+   *
+   * @param intent  intent
+   * @param error the command error
+   * */
   protected void onCommandError(Intent intent, Exception error) {
     // Do nothing.
   }
 
-  /** Called when a new task is added to the {@link DownloadManager}. */
+  /** Called when a new task is added to the {@link DownloadManager}.
+   *
+   * @param intent  intent
+   * @param taskId task id
+   * */
   protected void onNewTask(Intent intent, int taskId) {
     // Do nothing.
   }
 
-  /** Returns a notification channelId. See {@link NotificationChannel}. */
+  /** Returns a notification channelId. See {@link NotificationChannel}.
+   *
+   * @return Channel id.
+   * */
   protected abstract String getNotificationChannelId();
 
   /**
    * Helper method which calls {@link #startForeground(int, Notification)} with {@code
    * notificationIdOffset} and {@code foregroundNotification}.
+   *
+   * @param foregroundNotification - foregrounds notfication
    */
   public void startForeground(Notification foregroundNotification) {
     // logd("start foreground");
@@ -298,7 +317,9 @@ public abstract class DownloadService extends Service implements DownloadManager
     logd("stopSelf(" + lastStartId + ") result: " + stopSelfResult);
   }
 
-  /** Override this method to get notified on every second while there are active downloads. */
+  /** Override this method to get notified on every second while there are active downloads.
+   * @param activeDownloadTasks - downloads
+   * */
   protected void onProgressUpdate(DownloadState[] activeDownloadTasks) {
     // Do nothing.
   }
