@@ -1,6 +1,5 @@
 package com.google.android.exoplayer2.offline;
 
-import android.support.annotation.NonNull;
 
 import com.google.android.exoplayer2.util.Util;
 
@@ -26,6 +25,8 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import io.reactivex.annotations.NonNull;
 
 /**
  * Created by sharish on 29/01/18.

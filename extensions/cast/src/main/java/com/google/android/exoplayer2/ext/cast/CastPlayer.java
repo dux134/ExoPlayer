@@ -198,11 +198,7 @@ public final class CastPlayer implements Player {
    * Inserts a sequence of items into the media queue. If no media queue or period with id {@code
    * periodId} exist, does nothing.
    *
-<<<<<<< HEAD
-   * @param periodId The id of the period  that corresponds to the item
-=======
    * @param periodId The id of the period ({@link #getCurrentTimeline}) that corresponds to the item
->>>>>>> upstream/dev-v2
    *     that will follow immediately after the inserted items.
    * @param items The items to insert.
    * @return The Cast {@code PendingResult}, or null if no media queue or no period with id {@code
@@ -220,11 +216,7 @@ public final class CastPlayer implements Player {
    * Removes an item from the media queue. If no media queue or period with id {@code periodId}
    * exist, does nothing.
    *
-<<<<<<< HEAD
-   * @param periodId The id of the period that corresponds to the item
-=======
    * @param periodId The id of the period ({@link #getCurrentTimeline}) that corresponds to the item
->>>>>>> upstream/dev-v2
    *     to remove.
    * @return The Cast {@code PendingResult}, or null if no media queue or no period with id {@code
    *     periodId} exist.
@@ -240,11 +232,7 @@ public final class CastPlayer implements Player {
    * Moves an existing item within the media queue. If no media queue or period with id {@code
    * periodId} exist, does nothing.
    *
-<<<<<<< HEAD
-   * @param periodId The id of the period  that corresponds to the item
-=======
    * @param periodId The id of the period ({@link #getCurrentTimeline}) that corresponds to the item
->>>>>>> upstream/dev-v2
    *     to move.
    * @param newIndex The target index of the item in the media queue. Must be in the range 0 &lt;=
    *     index &lt; {@link Timeline#getPeriodCount()}, as provided by {@link #getCurrentTimeline()}.
@@ -263,11 +251,7 @@ public final class CastPlayer implements Player {
    * Returns the item that corresponds to the period with the given id, or null if no media queue or
    * period with id {@code periodId} exist.
    *
-<<<<<<< HEAD
-   * @param periodId The id of the period  that corresponds to the item
-=======
    * @param periodId The id of the period ({@link #getCurrentTimeline}) that corresponds to the item
->>>>>>> upstream/dev-v2
    *     to get.
    * @return The item that corresponds to the period with the given id, or null if no media queue or
    *     period with id {@code periodId} exist.
@@ -282,6 +266,7 @@ public final class CastPlayer implements Player {
 
   /**
    * Returns whether a cast session is available.
+   * @return tells whether a cast is available or not
    */
   public boolean isCastSessionAvailable() {
     return remoteMediaClient != null;

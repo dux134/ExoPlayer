@@ -1,7 +1,5 @@
 package com.google.android.exoplayer2.offline;
 
-import android.support.annotation.Nullable;
-
 import com.google.android.exoplayer2.offline.dataprovider.stream.HttpDataSourceFactoryBuilder;
 import com.google.android.exoplayer2.offline.models.CacheInfo;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
@@ -13,6 +11,8 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+
+import io.reactivex.annotations.Nullable;
 
 /**
  * Created by sharish on 22/01/18.
