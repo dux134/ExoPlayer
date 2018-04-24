@@ -36,11 +36,14 @@ import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.ParserException;
 import com.google.android.exoplayer2.SeekParameters;
 import com.google.android.exoplayer2.upstream.DataSource;
+
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
@@ -125,6 +128,26 @@ public final class Util {
       outputStream.write(buffer, 0, bytesRead);
     }
     return outputStream.toByteArray();
+  }
+
+  /**
+   * Converts the entirety of an {@link InputStream} to a String.
+   *
+   * @param inputStream the {@link InputStream} to be read. The input stream is not closed by this
+   *    method.
+   * @return a byte array containing all of the inputStream's bytes.
+   * @throws IOException if an error occurs reading from the stream.
+   */
+  public static String toString(InputStream inputStream) throws IOException {
+
+    StringBuilder sb = new StringBuilder();
+
+    BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+    String inputLine;
+    while ((inputLine = br.readLine()) != null) {
+      sb.append(inputLine);
+    }
+    return sb.toString();
   }
 
   /**

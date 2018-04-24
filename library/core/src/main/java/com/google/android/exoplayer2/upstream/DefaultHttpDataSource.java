@@ -206,10 +206,21 @@ public class DefaultHttpDataSource implements HttpDataSource {
 
     // Check for a valid response code.
     if (responseCode < 200 || responseCode > 299) {
+
+      String errMsg = null;
+      try {
+        errMsg = Util.toString(connection.getErrorStream());
+      } catch (IOException e) {
+        //ignore.
+      }
+
       Map<String, List<String>> headers = connection.getHeaderFields();
+
+      dataSpec.toString();
+
       closeConnectionQuietly();
       InvalidResponseCodeException exception =
-          new InvalidResponseCodeException(responseCode, headers, dataSpec);
+          new InvalidResponseCodeException(responseCode, errMsg, headers, dataSpec);
       if (responseCode == 416) {
         exception.initCause(new DataSourceException(DataSourceException.POSITION_OUT_OF_RANGE));
       }
